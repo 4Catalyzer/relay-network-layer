@@ -1,4 +1,4 @@
-import * as store from 'store/dist/store.modern';
+import store from 'store/dist/store.modern';
 
 const TOKEN_KEY = 'relay-auth-provider:token';
 
