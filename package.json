@@ -5,7 +5,7 @@
   "module": "lib/es/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/4Catalyzer/relay-auth-provider.git"
+    "url": "https://github.com/4Catalyzer/relay-auth.git"
   },
   "author": "4Catalyzer",
   "license": "MIT",
@@ -16,7 +16,7 @@
     "prepublishOnly": "yarn run build",
     "release": "4c release",
     "tdd": "jest --watch",
-    "test": "yarn lint && jest",
+    "test": "yarn lint",
     "testonly": "jest"
   },
   "publishConfig": {

@@ -1,15 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
-import useTimeout from '@restart/hooks/useTimeout';
+import { useCallback, useEffect, useState } from 'react';
 import useEventCallback from '@restart/hooks/useEventCallback';
+import useTimeout from '@restart/hooks/useTimeout';
 
 import LocalTokenStorage, {
-  TokenStorage,
   TokenResponse,
+  TokenStorage,
 } from './localTokenStorage';
 
 export interface TokenOptions {
+  /**
+   * Time, in milliseconds, to run expired token callback ahead of the
+   * actual token expiration
+   */
   leeway?: number;
+
+  /** A persistent store for the token, defaults to local storage and fallback to session */
   tokenStorage?: TokenStorage;
+
+  /** A callback fired when the token response is about to expire */
   onTokenExpired?(token: TokenResponse): void;
 }
 

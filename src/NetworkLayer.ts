@@ -1,14 +1,12 @@
 import {
-  RelayNetworkLayer,
-  // @ts-ignore
-  RelayNetworkLayerRequestBatch,
-  authMiddleware,
-  // @ts-ignore
-  batchMiddleware,
-  urlMiddleware,
-  loggerMiddleware,
   ConcreteBatch,
+  RelayNetworkLayer,
+  RelayNetworkLayerRequestBatch,
   Variables,
+  authMiddleware,
+  batchMiddleware,
+  loggerMiddleware,
+  urlMiddleware,
 } from 'react-relay-network-modern';
 import { Observable } from 'relay-runtime';
 import io from 'socket.io-client';
