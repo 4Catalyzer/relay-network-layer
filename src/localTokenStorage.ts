@@ -21,7 +21,7 @@ export default class LocalTokenStorage implements TokenStorage {
   load(): TokenResponse | null {
     const tokenResponse: TokenResponse | null = store.get(this.key, null);
 
-    if (!tokenResponse || Date.now() < tokenResponse.expiresAt) {
+    if (!tokenResponse || Date.now() > tokenResponse.expiresAt) {
       this.clear();
       return null;
     }
