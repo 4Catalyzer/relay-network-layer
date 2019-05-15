@@ -41,8 +41,8 @@ function assignBatchResponsePayloadIdsMiddleware() {
 }
 
 export interface NetworkLayerOptions {
-  path: string;
-  socketOrigin: string;
+  path?: string;
+  origin: string;
   socketPath: string;
   token: string;
   authPrefix?: string;
@@ -61,16 +61,16 @@ export default class NetworkLayer {
   constructor({
     token,
     authPrefix,
-    path,
-    socketPath,
-    socketOrigin,
+    origin,
+    socketPath = '/socket.io/graphql',
+    path = '/graphql',
     maxSubscriptions = 200,
   }: NetworkLayerOptions) {
-    const url = path;
+    const url = `${origin}${path}`;
 
     this.maxSubscriptions = maxSubscriptions;
 
-    this.socket = io(socketOrigin, {
+    this.socket = io(origin, {
       path: socketPath,
       transports: ['websocket'],
     });
