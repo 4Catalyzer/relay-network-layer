@@ -42,6 +42,7 @@ function assignBatchResponsePayloadIdsMiddleware() {
 
 export interface NetworkLayerOptions {
   path: string;
+  socketOrigin: string;
   socketPath: string;
   token: string;
   authPrefix?: string;
@@ -62,13 +63,14 @@ export default class NetworkLayer {
     authPrefix,
     path,
     socketPath,
+    socketOrigin,
     maxSubscriptions = 200,
   }: NetworkLayerOptions) {
     const url = path;
 
     this.maxSubscriptions = maxSubscriptions;
 
-    this.socket = io(origin, {
+    this.socket = io(socketOrigin, {
       path: socketPath,
       transports: ['websocket'],
     });
