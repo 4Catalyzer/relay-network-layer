@@ -65,6 +65,6 @@ export default function useAuthToken<
 
   return [tokenResponse, updateTokenResponse] as [
     TTokenResponse,
-    (resp: TTokenResponse | null) => void
+    (resp: TTokenResponse | null) => void,
   ];
 }

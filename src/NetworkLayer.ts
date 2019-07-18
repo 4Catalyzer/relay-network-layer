@@ -1,7 +1,11 @@
 import {
+  CacheConfig,
   ConcreteBatch,
+  Middleware,
+  QueryPayload,
   RelayNetworkLayer,
-  RelayNetworkLayerRequestBatch,
+  RelayObservable,
+  UploadableMap,
   Variables,
   authMiddleware,
   batchMiddleware,
@@ -14,36 +18,10 @@ import io from 'socket.io-client';
 // eslint-disable-next-line no-underscore-dangle
 declare const __DEV__: boolean;
 
-/**
- * ReactRelayNetworkModern expects response payloads to contain the request ID.
- * However, Apollo Server batch responses use position to match responses to
- * requests. This just copies over the request IDs by position.
- */
-function assignBatchResponsePayloadIdsMiddleware() {
-  return (next: any) => (req: any) => {
-    if (!(req instanceof RelayNetworkLayerRequestBatch)) {
-      return next(req);
-    }
-
-    return next(req).then((res: any) => {
-      res.json.forEach((payload: any, i: number) => {
-        if (!payload) {
-          return;
-        }
-
-        // eslint-disable-next-line no-param-reassign
-        payload.id = req.requests[i].id;
-      });
-
-      return res;
-    });
-  };
-}
-
 export interface NetworkLayerOptions {
   path?: string;
   origin: string;
-  socketPath: string;
+  socketPath?: string;
   token: string;
   authPrefix?: string;
   maxSubscriptions?: number;
@@ -57,6 +35,13 @@ export default class NetworkLayer {
   private readonly maxSubscriptions: number;
 
   private nextSubscriptionId: number = 0;
+
+  readonly execute: (
+    operation: ConcreteBatch,
+    variables: Variables,
+    cacheConfig: CacheConfig,
+    uploadables?: UploadableMap,
+  ) => RelayObservable<QueryPayload>;
 
   constructor({
     token,
@@ -104,8 +89,7 @@ export default class NetworkLayer {
           prefix: authPrefix,
           allowEmptyToken: true,
         }),
-        assignBatchResponsePayloadIdsMiddleware(),
-      ].filter(Boolean),
+      ].filter(Boolean) as Middleware[],
       {
         subscribeFn: this.subscribeFn,
       },
