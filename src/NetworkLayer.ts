@@ -1,18 +1,14 @@
 import {
-  CacheConfig,
   ConcreteBatch,
   Middleware,
-  QueryPayload,
   RelayNetworkLayer,
-  RelayObservable,
-  UploadableMap,
   Variables,
   authMiddleware,
   batchMiddleware,
   loggerMiddleware,
   urlMiddleware,
 } from 'react-relay-network-modern';
-import { Observable } from 'relay-runtime';
+import { ExecuteFunction, Observable } from 'relay-runtime';
 import io from 'socket.io-client';
 
 // eslint-disable-next-line no-underscore-dangle
@@ -36,12 +32,7 @@ export default class NetworkLayer {
 
   private nextSubscriptionId: number = 0;
 
-  readonly execute: (
-    operation: ConcreteBatch,
-    variables: Variables,
-    cacheConfig: CacheConfig,
-    uploadables?: UploadableMap,
-  ) => RelayObservable<QueryPayload>;
+  readonly execute: ExecuteFunction;
 
   constructor({
     token,
