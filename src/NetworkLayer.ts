@@ -30,7 +30,7 @@ export default class NetworkLayer {
 
   private readonly maxSubscriptions: number;
 
-  private nextSubscriptionId: number = 0;
+  private nextSubscriptionId = 0;
 
   readonly execute: ExecuteFunction;
 

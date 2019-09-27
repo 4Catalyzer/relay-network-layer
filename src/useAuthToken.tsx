@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import useEventCallback from '@restart/hooks/useEventCallback';
+import useStateAsync from '@restart/hooks/useStateAsync';
 import useTimeout from '@restart/hooks/useTimeout';
 
 import LocalTokenStorage, {
@@ -32,7 +33,10 @@ export default function useAuthToken<
 }: TokenOptions) {
   const timeout = useTimeout();
 
-  const [tokenResponse, setTokenResponse] = useState<TTokenResponse | null>(
+  const [
+    tokenResponse,
+    setTokenResponse,
+  ] = useStateAsync<TTokenResponse | null>(
     () => tokenStorage.load() as TTokenResponse,
   );
 
@@ -57,7 +61,7 @@ export default function useAuthToken<
       } else {
         tokenStorage.clear();
       }
-      setTokenResponse(nextTokenResponse);
+      return setTokenResponse(nextTokenResponse);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tokenStorage],
@@ -65,6 +69,6 @@ export default function useAuthToken<
 
   return [tokenResponse, updateTokenResponse] as [
     TTokenResponse,
-    (resp: TTokenResponse | null) => void,
+    typeof updateTokenResponse,
   ];
 }
