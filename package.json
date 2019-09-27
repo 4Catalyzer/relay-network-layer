@@ -1,13 +1,15 @@
 {
   "name": "@4c/relay-auth",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "lib/index.js",
   "module": "lib/es/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/4Catalyzer/relay-auth.git"
+    "url": "git+https://github.com/4Catalyzer/relay-auth.git"
   },
-  "author": "4Catalyzer",
+  "author": {
+    "name": "4Catalyzer"
+  },
   "license": "MIT",
   "scripts": {
     "build": "4c build src",
@@ -87,5 +89,11 @@
     "react-relay-network-modern": "^4.1.0",
     "socket.io-client": "^2.3.0",
     "store": "^2.0.12"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/4Catalyzer/relay-auth/issues"
+  },
+  "readme": "ERROR: No README data found!",
+  "homepage": "https://github.com/4Catalyzer/relay-auth#readme",
+  "_id": "@4c/relay-auth@1.1.0"
 }
