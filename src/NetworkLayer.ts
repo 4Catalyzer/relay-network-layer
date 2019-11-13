@@ -64,6 +64,10 @@ export default class NetworkLayer {
       }
     });
 
+    this.socket.on('disconnect', () => {
+      this.authenticated = false;
+    });
+
     this.socket.on('subscription update', ({ id, ...payload }: any) => {
       const subscription = this.subscriptions.get(id);
       if (!subscription) {
