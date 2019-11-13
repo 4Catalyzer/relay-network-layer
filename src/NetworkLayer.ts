@@ -32,6 +32,8 @@ export default class NetworkLayer {
 
   private nextSubscriptionId = 0;
 
+  private authenticated = false;
+
   readonly execute: ExecuteFunction;
 
   constructor({
@@ -53,12 +55,15 @@ export default class NetworkLayer {
 
     this.socket.on('connect', () => {
       if (token) {
-        this.emitTransient('authenticate', token);
+        this.emitTransient('authenticate', token, () => {
+          console.log('[AAA] authenticate complated');
+          this.authenticated = true;
+          this.subscriptions.forEach((subscription, id) => {
+            this.subscribe(id, subscription);
+          });
+        });
       }
 
-      this.subscriptions.forEach((subscription, id) => {
-        this.subscribe(id, subscription);
-      });
     });
 
     this.socket.on('subscription update', ({ id, ...payload }: any) => {
@@ -109,7 +114,11 @@ export default class NetworkLayer {
       };
 
       this.subscriptions.set(id, subscription);
-      this.subscribe(id, subscription);
+
+      console.log(`[AAA] subscribeFn called when authenticated=${this.authenticated}`);
+      if (this.authenticated) {
+        this.subscribe(id, subscription);
+      }
 
       return {
         unsubscribe: () => {
