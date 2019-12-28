@@ -1,3 +1,3 @@
 {
-  "extends": ["github>4Catalyzer/renovate-config"]
+  "extends": ["github>4Catalyzer/renovate-config:library", ":automergeMinor"]
 }
