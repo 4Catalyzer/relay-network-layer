@@ -1,143 +1,224 @@
 import {
-  ConcreteBatch,
-  Middleware,
-  RelayNetworkLayer,
-  Variables,
-  authMiddleware,
-  batchMiddleware,
-  loggerMiddleware,
-  urlMiddleware,
-} from 'react-relay-network-modern';
-import { ExecuteFunction, Observable } from 'relay-runtime';
-import io from 'socket.io-client';
+  ExecuteFunction,
+  FetchFunction,
+  GraphQLResponse,
+  Network,
+  UploadableMap,
+} from 'relay-runtime';
+import { Sink } from 'relay-runtime/lib/network/RelayObservable';
+
+import createSubscribe from './createSubscribe';
 
 // eslint-disable-next-line no-underscore-dangle
 declare const __DEV__: boolean;
 
+interface Network {
+  execute: ExecuteFunction;
+}
+
 export interface NetworkLayerOptions {
   path?: string;
-  origin: string;
-  socketPath?: string;
-  token: string;
+  url?: string;
+  subscriptionUrl?: string;
+  batch?: boolean;
+  token?: string;
   authPrefix?: string;
+  authHeader?: string;
+  init?: RequestInit;
+  batchTimeout?: number;
   maxSubscriptions?: number;
 }
 
-export default class NetworkLayer {
-  private readonly socket: SocketIOClient.Socket;
+interface Data {
+  id: string;
+  query: string;
+  variables: {};
+}
+let uid = 0;
 
-  private readonly subscriptions = new Map();
+function getFormData(
+  { id, query, variables }: Data,
+  uploadables: UploadableMap,
+) {
+  const formData = new FormData();
+  formData.append('id', id);
+  formData.append('query', query);
+  formData.append('variables', JSON.stringify(variables));
 
-  private readonly maxSubscriptions: number;
+  Object.keys(uploadables).forEach(key => {
+    formData.append(key, uploadables[key]);
+  });
 
-  private nextSubscriptionId = 0;
+  return formData;
+}
 
-  readonly execute: ExecuteFunction;
+let batcher: null | {
+  bodies: string[];
+  sinks: Sink<GraphQLResponse>[];
+} = null;
 
-  constructor({
+const SimpleNetworkLayer = {
+  create({
     token,
-    authPrefix,
-    origin,
-    socketPath = '/socket.io/graphql',
-    path = '/graphql',
-    maxSubscriptions = 200,
-  }: NetworkLayerOptions) {
-    const url = `${origin}${path}`;
-
-    this.maxSubscriptions = maxSubscriptions;
-
-    this.socket = io(origin, {
-      path: socketPath,
-      transports: ['websocket'],
-    });
-
-    this.socket.on('connect', () => {
-      if (token) {
-        this.emitTransient('authenticate', token);
-      }
-
-      this.subscriptions.forEach((subscription, id) => {
-        this.subscribe(id, subscription);
-      });
-    });
-
-    this.socket.on('subscription update', ({ id, ...payload }: any) => {
-      const subscription = this.subscriptions.get(id);
-      if (!subscription) {
-        return;
-      }
-
-      subscription.sink.next(payload);
-    });
-
-    const network = new RelayNetworkLayer(
-      [
-        __DEV__ && loggerMiddleware(),
-        urlMiddleware({ url }),
-        batchMiddleware({ batchUrl: url }),
-        authMiddleware({
+    subscriptionUrl,
+    maxSubscriptions,
+    authPrefix = 'Bearer',
+    authHeader = 'Authorization',
+    init,
+    batchTimeout,
+    batch = true,
+    url = '/graphql',
+  }: NetworkLayerOptions = {}): Network {
+    const subscribe = subscriptionUrl
+      ? createSubscribe({
           token,
-          prefix: authPrefix,
-          allowEmptyToken: true,
-        }),
-      ].filter(Boolean) as Middleware[],
-      {
-        subscribeFn: this.subscribeFn,
-      },
-    );
-    // @ts-ignore
-    this.execute = network.execute;
-  }
+          maxSubscriptions,
+          url: subscriptionUrl,
+        })
+      : undefined;
 
-  subscribeFn = (operation: ConcreteBatch, variables: Variables) =>
-    // @ts-ignore
-    new Observable(sink => {
-      const id = this.nextSubscriptionId++;
-
-      if (this.subscriptions.size >= this.maxSubscriptions) {
-        if (__DEV__) {
-          // eslint-disable-next-line no-console
-          console.warn('subscription limit reached');
-        }
-        return undefined;
+    function processJson(json: any) {
+      if (json?.errors) {
+        throw new Error(`GraphQLError: \n\n${JSON.stringify(json.errors)}`);
       }
-
-      const subscription = {
-        sink,
-        query: operation.text,
-        variables,
-      };
-
-      this.subscriptions.set(id, subscription);
-      this.subscribe(id, subscription);
-
-      return {
-        unsubscribe: () => {
-          this.emitTransient('unsubscribe', id);
-          this.subscriptions.delete(id);
-        },
-      };
-    });
-
-  subscribe(id: number, { query, variables }: any) {
-    this.emitTransient('subscribe', { id, query, variables });
-  }
-
-  emitTransient(event: string, ...args: any[]) {
-    // For transient state management, we re-emit on reconnect anyway, so no
-    // need to use the send buffer.
-    if (!this.socket.connected) {
-      return;
+      return json.data;
     }
 
-    this.socket.emit(event, ...args);
-  }
+    function makeRequest(body: string | FormData, signal?: AbortSignal) {
+      const headers = new Headers(init?.headers);
+      if (token) {
+        headers.set(authHeader, `${authPrefix} ${token}`);
+      }
+      if (!headers.has('Accept')) {
+        headers.set('Accept', '*/*');
+      }
+      if (typeof body === 'string' && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
 
-  close() {
-    this.socket.disconnect();
+      return fetch(url, {
+        method: 'POST',
+        ...init,
+        body,
+        signal,
+        headers,
+      }).then(resp => {
+        if (!resp.ok) {
+          return resp.text().then(txt => {
+            throw new Error(
+              `RelayNetworkLayerError: [${resp.status}]: ${txt}`,
+            );
+          });
+        }
 
-    this.subscriptions.forEach(({ sink }) => {
-      sink.complete();
-    });
-  }
-}
+        return resp.json();
+      });
+    }
+
+    /**
+     * Queues a single request, that is flushed on the next tick (or `batchTimeout`).
+     */
+    function addToBatch(reqBody: string, reqSink: Sink<GraphQLResponse>) {
+      if (!batcher) {
+        batcher = {
+          bodies: [],
+          sinks: [],
+        };
+
+        setTimeout(() => {
+          const { bodies, sinks } = batcher!;
+
+          batcher = null;
+
+          makeRequest(`[${bodies.join(',')}]`)
+            .then(batchResp => {
+              if (!batchResp || !Array.isArray(batchResp)) {
+                throw new Error(
+                  'RelayNetworkLayerError: invalid batch response, must return a JSON array',
+                );
+              }
+              if (batchResp.length !== sinks.length) {
+                throw new Error(
+                  `RelayNetworkLayerError: invalid batch response, mismatched length, sent requests for ${sinks.length} queries but received: ${batchResp.length}`,
+                );
+              }
+
+              // Match the response with the sink and finish each request
+              sinks.forEach((sink, idx) => {
+                try {
+                  const data = processJson(batchResp[idx]);
+                  sink.next!(data);
+                  sink.complete!();
+                } catch (err) {
+                  sink.error!(err);
+                }
+              });
+            })
+            .catch(err => {
+              sinks.forEach(s => s.error!(err));
+            });
+        }, batchTimeout);
+      }
+
+      batcher.bodies.push(reqBody);
+      batcher.sinks.push(reqSink);
+    }
+
+    const fetchFn: FetchFunction = (
+      operation,
+      variables,
+      _cacheConfig,
+      uploadables,
+    ) => {
+      return {
+        subscribe(sink) {
+          const data = {
+            id: operation.id || operation.name || String(uid++),
+            query: operation.text || '',
+            variables,
+          };
+
+          const body = uploadables
+            ? getFormData(data, uploadables)
+            : JSON.stringify(data);
+
+          if (
+            !batch ||
+            uploadables ||
+            operation.operationKind === 'mutation'
+          ) {
+            const controller = window.AbortController
+              ? new window.AbortController()
+              : null;
+
+            makeRequest(body, controller?.signal)
+              .then(processJson)
+              .then(
+                (value: any) => {
+                  sink.next!(value);
+                  sink.complete!();
+                },
+                (err: Error) => {
+                  if (err?.name === 'AbortError') sink.complete!();
+                  else sink.error!(err);
+                },
+              );
+
+            return (() => {
+              controller?.abort();
+            }) as any; // the type here is wrong
+          }
+
+          addToBatch(body as string, sink as Sink<GraphQLResponse>);
+
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          return () => {};
+        },
+      };
+    };
+
+    return Network.create(fetchFn, subscribe);
+  },
+};
+
+export default SimpleNetworkLayer;
