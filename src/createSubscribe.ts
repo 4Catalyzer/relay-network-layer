@@ -60,9 +60,8 @@ export default function createSubscribe({
       subscription.sink.next(payload);
     });
 
-  function subscribeFn(operation: RequestParameters, variables: Variables) {
-    // @ts-ignore
-    return Observable.create(sink => {
+  function subscribeFn<T>(operation: RequestParameters, variables: Variables) {
+    return Observable.create<T>(sink => {
       const id = nextSubscriptionId++;
 
       if (subscriptions.size >= maxSubscriptions) {
@@ -82,11 +81,9 @@ export default function createSubscribe({
       subscriptions.set(id, subscription);
       subscribe(id, subscription);
 
-      return {
-        unsubscribe: () => {
-          emitTransient('unsubscribe', id);
-          subscriptions.delete(id);
-        },
+      return () => {
+        emitTransient('unsubscribe', id);
+        subscriptions.delete(id);
       };
     });
   }
@@ -102,19 +99,3 @@ export default function createSubscribe({
 
   return subscribeFn;
 }
-
-// const network = new RelayNetworkLayer(
-//   [
-//     __DEV__ && loggerMiddleware(),
-//     urlMiddleware({ url }),
-//     batchMiddleware({ batchUrl: url }),
-//     authMiddleware({
-//       token,
-//       prefix: authPrefix,
-//       allowEmptyToken: true,
-//     }),
-//   ].filter(Boolean) as Middleware[],
-//   {
-//     subscribeFn: this.subscribeFn,
-//   },
-// );

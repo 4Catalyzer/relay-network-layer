@@ -1,5 +1,3 @@
-// jest.mock('socket-io.client');
-
 import {
   RelayObservable,
   Subscription,

@@ -1,8 +1,2 @@
-import 'react-relay-network-modern';
-
-declare module 'react-relay-network-modern' {
-  export const batchMiddleware: any;
-  export class RelayNetworkLayerRequestBatch {
-    requests: any[];
-  }
-}
+// eslint-disable-next-line no-underscore-dangle
+declare const __DEV__: boolean;

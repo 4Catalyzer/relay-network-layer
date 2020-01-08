@@ -18,7 +18,7 @@
     "prepublishOnly": "yarn run build",
     "release": "4c release",
     "tdd": "jest --watch",
-    "test": "yarn lint",
+    "test": "yarn lint && yarn testonly",
     "testonly": "jest"
   },
   "publishConfig": {
@@ -41,13 +41,18 @@
     "testEnvironment": "jsdom",
     "moduleNameMapper": {
       "fetch-mock$": "<rootDir>/node_modules/fetch-mock/cjs/client.js"
+    },
+    "setupFiles": [
+     "whatwg-fetch"
+    ]
+  },
+  "importSort": {
+    ".js, .ts, .tsx": {
+      "style": "@4c/import-sort"
     }
   },
   "release": {
     "publishDir": "lib"
-  },
-  "resolutions": {
-    "eslint": "^6.4.0"
   },
   "peerDependencies": {
     "react": "^16.8.6",

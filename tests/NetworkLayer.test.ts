@@ -1,6 +1,5 @@
 import fetchMock from 'fetch-mock-jest';
 import { Network } from 'relay-runtime/lib/network/RelayNetworkTypes';
-import 'whatwg-fetch';
 
 import NetworkLayer from '../src/NetworkLayer';
 
