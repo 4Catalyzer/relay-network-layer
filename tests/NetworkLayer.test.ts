@@ -14,7 +14,9 @@ describe('NetworkLayer', () => {
     fetchMock.post('/graphql', resp);
   }
 
-  function run(
+  // async to include errors thrown in execute
+  // eslint-disable-next-line require-await
+  async function run(
     layer: Network,
     { files, kind = 'query', variables = {} }: any = {},
   ) {
@@ -55,7 +57,7 @@ describe('NetworkLayer', () => {
       },
     });
 
-    expect(result).toEqual(defaultResponse.data);
+    expect(result).toEqual(defaultResponse);
   });
 
   it('should handle uploads', async () => {
@@ -81,7 +83,19 @@ describe('NetworkLayer', () => {
       'cert',
     ]);
 
-    expect(result).toEqual(defaultResponse.data);
+    expect(result).toEqual(defaultResponse);
+  });
+
+  it('should error when subscriptions are not supported', async () => {
+    const networkLayer = NetworkLayer.create();
+
+    mockEndpoint();
+
+    await expect(
+      run(networkLayer, { kind: 'subscription' }),
+    ).rejects.toThrowError(
+      'This network layer does not support Subscriptions.',
+    );
   });
 
   describe('batching', () => {
@@ -97,15 +111,15 @@ describe('NetworkLayer', () => {
 
       expect(fetchMock).toHaveFetchedTimes(1);
 
-      expect(req1).toEqual(defaultResponse.data);
-      expect(req2).toEqual(defaultResponse.data);
+      expect(req1).toEqual(defaultResponse);
+      expect(req2).toEqual(defaultResponse);
 
       [req1, req2] = await Promise.all([run(networkLayer), run(networkLayer)]);
 
       expect(fetchMock).toHaveFetchedTimes(2);
 
-      expect(req1).toEqual(defaultResponse.data);
-      expect(req2).toEqual(defaultResponse.data);
+      expect(req1).toEqual(defaultResponse);
+      expect(req2).toEqual(defaultResponse);
     });
 
     it('should error for invalid response', async () => {
