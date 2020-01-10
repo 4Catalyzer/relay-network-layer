@@ -130,6 +130,12 @@ import NetworkLayer from 'relay-network-layer';
 const network = NetworkLayer.create(),
 ```
 
+And to tear down subscription sockets call:
+
+```js
+network.close();
+```
+
 Create accepts a set of options of the type:
 
 ```ts

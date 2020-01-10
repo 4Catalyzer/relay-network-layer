@@ -1,4 +1,9 @@
-import { Observable, RequestParameters, Variables } from 'relay-runtime';
+import {
+  GraphQLResponse,
+  Observable,
+  RequestParameters,
+  Variables,
+} from 'relay-runtime';
 import io from 'socket.io-client';
 
 enum _APOLLO_TYPES {
@@ -76,8 +81,8 @@ export default function createSubscribe({
       subscription.sink.next(payload);
     });
 
-  function subscribeFn<T>(operation: RequestParameters, variables: Variables) {
-    return Observable.create<T>(sink => {
+  function subscribeFn(operation: RequestParameters, variables: Variables) {
+    return Observable.create<GraphQLResponse>(sink => {
       const id = nextSubscriptionId++;
 
       if (subscriptions.size >= maxSubscriptions) {

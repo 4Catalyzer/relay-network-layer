@@ -3,9 +3,13 @@ import { ExecuteFunction, Network } from 'relay-runtime';
 import createFetch from './createFetch';
 import createSubscribe from './createSubscribe';
 
-interface NetworkLayer {
+export interface Network {
   execute: ExecuteFunction;
+  close: () => void;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
 
 export interface NetworkLayerOptions {
   /** The graphql API endpoint, provide a pathname or fully qualified url. */
@@ -71,8 +75,16 @@ const SimpleNetworkLayer = {
     batchTimeout,
     batch = true,
     url = '/graphql',
-  }: NetworkLayerOptions = {}): NetworkLayer {
-    return Network.create(
+  }: NetworkLayerOptions = {}) {
+    const subscribeFn = subscriptionUrl
+      ? createSubscribe({
+          token,
+          maxSubscriptions,
+          url: subscriptionUrl,
+        })
+      : undefined;
+
+    const network: any = Network.create(
       createFetch({
         authPrefix,
         authHeader,
@@ -90,6 +102,10 @@ const SimpleNetworkLayer = {
           })
         : undefined,
     );
+
+    network.close = subscribeFn?.close || noop;
+
+    return network as Network;
   },
 };
 

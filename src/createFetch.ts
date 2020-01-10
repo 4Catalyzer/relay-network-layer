@@ -1,6 +1,7 @@
 import {
   CacheConfig,
   FetchFunction,
+  GraphQLResponse,
   Observable,
   RequestParameters,
   UploadableMap,
@@ -44,7 +45,7 @@ function getFormData(
 
 let batcher: null | {
   bodies: string[];
-  sinks: Sink<any>[];
+  sinks: Sink<GraphQLResponse>[];
 } = null;
 
 function createFetch({
@@ -56,14 +57,21 @@ function createFetch({
   batchTimeout,
   batch = true,
 }: FetchOptions = {}): FetchFunction {
-  function processJson(json: any) {
+  function processJson(json: GraphQLResponse) {
     if (json?.errors) {
-      throw new Error(`GraphQLError: \n\n${JSON.stringify(json.errors)}`);
+      const gqlError = new Error(
+        `GraphQLError: \n\n${JSON.stringify(json.errors)}`,
+      );
+      (gqlError as any).json = json;
+      throw gqlError;
     }
-    return json.data;
+    return json;
   }
 
-  function makeRequest(body: string | FormData, signal?: AbortSignal) {
+  function makeRequest<T>(
+    body: string | FormData,
+    signal?: AbortSignal,
+  ): Promise<T> {
     const headers = new Headers(init?.headers);
     if (token) {
       headers.set(authHeader, `${authPrefix} ${token}`);
@@ -84,7 +92,11 @@ function createFetch({
     }).then(resp => {
       if (!resp.ok) {
         return resp.text().then(txt => {
-          throw new Error(`RelayNetworkLayerError: [${resp.status}]: ${txt}`);
+          const httpError = new Error(
+            `RelayNetworkLayerError: [${resp.status}]: ${txt}`,
+          );
+          (httpError as any).status = resp.status;
+          throw httpError;
         });
       }
 
@@ -95,7 +107,7 @@ function createFetch({
   /**
    * Queues a single request, that is flushed on the next tick (or `batchTimeout`).
    */
-  function addToBatch<T>(reqBody: string, reqSink: Sink<T>) {
+  function addToBatch(reqBody: string, reqSink: Sink<GraphQLResponse>) {
     if (!batcher) {
       batcher = {
         bodies: [],
@@ -107,7 +119,7 @@ function createFetch({
 
         batcher = null;
 
-        makeRequest(`[${bodies.join(',')}]`)
+        makeRequest<GraphQLResponse[]>(`[${bodies.join(',')}]`)
           .then(batchResp => {
             if (!batchResp || !Array.isArray(batchResp)) {
               throw new Error(
@@ -141,13 +153,13 @@ function createFetch({
     batcher.sinks.push(reqSink);
   }
 
-  function fetchFn<T>(
+  function fetchFn(
     operation: RequestParameters,
     variables: Variables,
     _cacheConfig?: CacheConfig,
     uploadables?: UploadableMap,
   ) {
-    return Observable.create<T>(sink => {
+    return Observable.create<GraphQLResponse>(sink => {
       const data = {
         id: operation.id || operation.name || String(uid++),
         query: operation.text || '',
@@ -168,10 +180,10 @@ function createFetch({
         ? new window.AbortController()
         : null;
 
-      makeRequest(body, controller?.signal)
+      makeRequest<GraphQLResponse>(body, controller?.signal)
         .then(processJson)
         .then(
-          (value: any) => {
+          value => {
             sink.next!(value);
             sink.complete!();
           },
