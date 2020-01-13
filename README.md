@@ -59,7 +59,7 @@ import { Network } from 'relay-runtime';
 
 import { createFetch, createSubscribe } from 'relay-network-layer';
 
-const network = NetworkLayer.create(
+const network = Network.create(
   createFetch({
     url: '/graphql',
     token: accessToken,
