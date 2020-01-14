@@ -182,6 +182,9 @@ function createFetch({
     _cacheConfig?: CacheConfig,
     uploadables?: UploadableMap,
   ) {
+    // We use observables directly here instead of the promise value
+    // in order to express Aborted requests unambiguously: completed with
+    // no value sent.
     return Observable.create<GraphQLResponse>(sink => {
       const data = {
         id: operation.id || operation.name || String(uid++),
