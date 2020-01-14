@@ -60,6 +60,29 @@ describe('NetworkLayer', () => {
     expect(result).toEqual(defaultResponse);
   });
 
+  it('should throw errors', async () => {
+    const networkLayer = NetworkLayer.create({ batch: false });
+
+    mockEndpoint({ data: null, errors: [{ message: 'err!' }] });
+
+    const errors = await run(networkLayer).catch(errs => errs);
+
+    expect(errors.json.errors).toHaveLength(1);
+  });
+
+  it('should not throw errors', async () => {
+    const networkLayer = NetworkLayer.create({
+      batch: false,
+      throwErrors: false,
+    });
+
+    mockEndpoint({ data: {}, errors: [{ message: 'err!' }] });
+
+    const resp = await run(networkLayer);
+
+    expect(resp?.errors).toHaveLength(1);
+  });
+
   it('should handle uploads', async () => {
     const networkLayer = NetworkLayer.create({ batch: false });
 

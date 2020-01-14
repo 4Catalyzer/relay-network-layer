@@ -12,6 +12,7 @@ import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 export interface FetchOptions {
   url?: string;
   init?: RequestInit;
+  throwErrors?: boolean;
   authorization?:
     | string
     | {
@@ -70,13 +71,14 @@ function createFetch({
   url = '/graphql',
   init,
   authorization,
+  throwErrors = true,
   batch,
 }: FetchOptions = {}): FetchFunction {
   const batching = normalizeBatch(batch);
   const auth = normalizeAuth(authorization);
 
   function processJson(json: GraphQLResponse) {
-    if (json?.errors) {
+    if (throwErrors && json?.errors) {
       const gqlError = new Error(
         `GraphQLError: \n\n${JSON.stringify(json.errors)}`,
       );
@@ -153,8 +155,8 @@ function createFetch({
             // Match the response with the sink and finish each request
             sinks.forEach((sink, idx) => {
               try {
-                const data = processJson(batchResp[idx]);
-                sink.next!(data);
+                const resp = processJson(batchResp[idx]);
+                sink.next!(resp);
                 sink.complete!();
               } catch (err) {
                 sink.error!(err);

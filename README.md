@@ -151,6 +151,16 @@ interface NetworkLayerOptions {
   subscriptionUrl?: string;
 
   /**
+   * Controls the error behavior, when set, responses with an `errors` array will be turned into Errors
+   * and thrown.
+   *
+   * Defaults: `true`
+   *
+   * ref: https://github.com/facebook/relay/issues/1816#issuecomment-304492071
+   */
+  throwErrors?: boolean;
+
+  /**
    * Batches requests within a time frame into a single request for more
    * efficient fetching. requests are sent as a JSON array. Mutations and file uploads
    * are NOT batched.
