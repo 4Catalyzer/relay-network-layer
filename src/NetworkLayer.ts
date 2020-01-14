@@ -24,7 +24,7 @@ export interface NetworkLayerOptions {
 
   /**
    * Batches requests within a time frame into a single request for more
-   * efficient fetching. requests are sent as a JSON array. Mutatations and file uploads
+   * efficient fetching. requests are sent as a JSON array. Mutations and file uploads
    * are NOT batched.
    *
    * Defaults to `true`.
