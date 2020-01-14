@@ -5,7 +5,9 @@ import {
 // @ts-ignore
 import { reset, serverEmit } from 'socket.io-client';
 
-import createSubscribe from '../src/createSubscribe';
+import createSubscribe, {
+  SocketioSubscriptionClient,
+} from '../src/createSubscribe';
 
 describe('createSubscribe', () => {
   const subs = [] as Subscription[];
@@ -28,7 +30,7 @@ describe('createSubscribe', () => {
   });
 
   it('should connect', () => {
-    const { socket } = createSubscribe();
+    const { socket } = createSubscribe().client as SocketioSubscriptionClient;
 
     jest.runOnlyPendingTimers();
 
@@ -42,7 +44,8 @@ describe('createSubscribe', () => {
   });
 
   it('should handle relative path', () => {
-    const { socket } = createSubscribe({ url: '/graphql' });
+    const { socket } = createSubscribe({ url: '/graphql' })
+      .client as SocketioSubscriptionClient;
 
     // @ts-ignore
     expect(socket.origin).toEqual('http://localhost');
@@ -51,7 +54,8 @@ describe('createSubscribe', () => {
   });
 
   it('should parse absolute url', () => {
-    const { socket } = createSubscribe({ url: 'https://foo.com/gql' });
+    const { socket } = createSubscribe({ url: 'https://foo.com/gql' })
+      .client as SocketioSubscriptionClient;
 
     // @ts-ignore
     expect(socket.origin).toEqual('https://foo.com');
@@ -61,7 +65,8 @@ describe('createSubscribe', () => {
 
   it('should authenticate', () => {
     const token = 'foo';
-    const { socket } = createSubscribe({ token });
+    const { socket } = createSubscribe({ token })
+      .client as SocketioSubscriptionClient;
 
     jest.runAllTimers();
 
@@ -70,7 +75,7 @@ describe('createSubscribe', () => {
 
   it('should immediately emit pending subscriptions', () => {
     const subscribe = createSubscribe();
-
+    const client = subscribe.client as SocketioSubscriptionClient;
     run(
       subscribe(
         {
@@ -94,16 +99,16 @@ describe('createSubscribe', () => {
       ),
     );
 
-    expect(subscribe.socket.emit).not.toHaveBeenCalledWith('subscribe');
+    expect(client.socket.emit).not.toHaveBeenCalledWith('subscribe');
 
     jest.runAllTimers();
 
-    expect(subscribe.socket.emit).toHaveBeenCalledWith('subscribe', {
+    expect(client.socket.emit).toHaveBeenCalledWith('subscribe', {
       id: 0,
       query: 'subscription foo',
       variables: {},
     });
-    expect(subscribe.socket.emit).toHaveBeenLastCalledWith('subscribe', {
+    expect(client.socket.emit).toHaveBeenLastCalledWith('subscribe', {
       id: 1,
       query: 'subscription bar',
       variables: {},
@@ -112,6 +117,8 @@ describe('createSubscribe', () => {
 
   it('should subscribe', () => {
     const subscribe = createSubscribe();
+
+    const client = subscribe.client as SocketioSubscriptionClient;
 
     jest.runAllTimers();
 
@@ -128,7 +135,7 @@ describe('createSubscribe', () => {
       ),
     );
 
-    expect(subscribe.socket.emit).toHaveBeenLastCalledWith('subscribe', {
+    expect(client.socket.emit).toHaveBeenLastCalledWith('subscribe', {
       id: 0,
       query: 'subscription foo',
       variables: {},
@@ -137,6 +144,8 @@ describe('createSubscribe', () => {
 
   it('should match subs by id', () => {
     const subscribe = createSubscribe();
+    const client = subscribe.client as SocketioSubscriptionClient;
+
     const observer = {
       next: jest.fn(),
       complete: jest.fn(),
@@ -161,7 +170,7 @@ describe('createSubscribe', () => {
 
     jest.runAllTimers();
 
-    expect(subscribe.socket.emit).toHaveBeenCalledWith('subscribe', {
+    expect(client.socket.emit).toHaveBeenCalledWith('subscribe', {
       id: 0,
       query: 'subscription foo',
       variables: {},
@@ -173,6 +182,8 @@ describe('createSubscribe', () => {
 
   it('should clean up', () => {
     const subscribe = createSubscribe();
+    const client = subscribe.client as SocketioSubscriptionClient;
+
     const observer = {
       next: jest.fn(),
       complete: jest.fn(),
@@ -201,7 +212,7 @@ describe('createSubscribe', () => {
 
     jest.runAllTimers();
 
-    expect(subscribe.socket.emit).toHaveBeenCalledWith('subscribe', {
+    expect(client.socket.emit).toHaveBeenCalledWith('subscribe', {
       id: 0,
       query: 'subscription foo',
       variables: {},

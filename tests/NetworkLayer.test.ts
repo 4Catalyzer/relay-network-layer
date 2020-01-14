@@ -145,7 +145,7 @@ describe('NetworkLayer', () => {
 
   describe('auth', () => {
     it('should add auth header', async () => {
-      const nl = NetworkLayer.create({ batch: false, token: '12345' });
+      const nl = NetworkLayer.create({ batch: false, authorization: '12345' });
 
       mockEndpoint();
 
@@ -159,7 +159,10 @@ describe('NetworkLayer', () => {
     });
 
     it('should handle empty token', async () => {
-      const nl = NetworkLayer.create({ batch: false, token: '' });
+      const nl = NetworkLayer.create({
+        batch: { enabled: false },
+        authorization: '',
+      });
 
       mockEndpoint();
 
@@ -171,9 +174,11 @@ describe('NetworkLayer', () => {
     it('should allow custom auth header and prefix', async () => {
       const nl = NetworkLayer.create({
         batch: false,
-        token: '12345',
-        authHeader: 'YOLO',
-        authPrefix: 'Dank',
+        authorization: {
+          token: '12345',
+          headerName: 'YOLO',
+          scheme: 'Dank',
+        },
       });
 
       mockEndpoint();

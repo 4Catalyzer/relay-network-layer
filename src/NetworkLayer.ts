@@ -31,29 +31,39 @@ export interface NetworkLayerOptions {
    *
    * **Requires a Graphql server that understands batching"
    */
-  batch?: boolean;
+  batch?:
+    | boolean
+    | {
+        enabled: boolean;
+
+        /**
+         * The amount of time to wait before a batch is closed and sent to the server.
+         *
+         * The default is `0ms`, or about the next tick of the event loop.
+         */
+        timeoutMs?: number;
+      };
 
   /** An authorization token sent in a header with every request */
   token?: string;
 
-  /** The prefix string in the auth header defaults to "Bearer " */
-  authPrefix?: string;
+  /** The authorization configuration or token for a convenient shorthand */
+  authorization?:
+    | string
+    | {
+        token: string;
+        /** The header the `token` is sent in defaults to "Authorization" */
+        headerName?: string;
 
-  /** The header the `token` is sent in defaults to "Authorization" */
-  authHeader?: string;
+        /** The prefix string in the auth header defaults to "Bearer" */
+        scheme?: string;
+      };
 
   /**
    * Any fetch API "init" details, this is based directly to the `fetch` call, see
    * [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) for API details.
    */
   init?: RequestInit;
-
-  /**
-   * The amount of time to wait before a batch is closed and sent to the server.
-   *
-   * The default is `0ms`, or about the next tick of the event loop.
-   */
-  batchTimeout?: number;
 
   /**
    * The max number of concurrent subscriptions allowed.
@@ -69,11 +79,9 @@ const SimpleNetworkLayer = {
     token,
     subscriptionUrl,
     maxSubscriptions,
-    authPrefix = 'Bearer',
-    authHeader = 'Authorization',
+    authorization,
     init,
-    batchTimeout,
-    batch = true,
+    batch,
     url = '/graphql',
   }: NetworkLayerOptions = {}) {
     const subscribeFn = subscriptionUrl
@@ -86,17 +94,17 @@ const SimpleNetworkLayer = {
 
     const network: any = Network.create(
       createFetch({
-        authPrefix,
-        authHeader,
+        authorization,
         init,
-        batchTimeout,
         batch,
         url,
-        token,
       }),
       subscriptionUrl
         ? createSubscribe({
-            token,
+            token:
+              typeof authorization === 'string'
+                ? authorization
+                : authorization?.token,
             maxSubscriptions,
             url: subscriptionUrl,
           })

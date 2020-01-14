@@ -12,11 +12,19 @@ import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 export interface FetchOptions {
   url?: string;
   init?: RequestInit;
-  token?: string;
-  authPrefix?: string;
-  authHeader?: string;
-  batch?: boolean;
-  batchTimeout?: number;
+  authorization?:
+    | string
+    | {
+        token: string;
+        headerName?: string;
+        scheme?: string;
+      };
+  batch?:
+    | boolean
+    | {
+        enabled: boolean;
+        timeoutMs?: number;
+      };
 }
 
 export interface Data {
@@ -48,15 +56,25 @@ let batcher: null | {
   sinks: Sink<GraphQLResponse>[];
 } = null;
 
+function normalizeBatch(batch: FetchOptions['batch'] = true) {
+  const p = typeof batch === 'boolean' ? { enabled: batch } : {};
+  return { timeoutMs: 0, ...p };
+}
+
+function normalizeAuth(auth: FetchOptions['authorization'] = '') {
+  const p = typeof auth === 'string' ? { token: auth } : auth;
+  return { scheme: 'Bearer', headerName: 'Authorization', ...p };
+}
+
 function createFetch({
   url = '/graphql',
   init,
-  token,
-  authPrefix = 'Bearer',
-  authHeader = 'Authorization',
-  batchTimeout,
-  batch = true,
+  authorization,
+  batch,
 }: FetchOptions = {}): FetchFunction {
+  const batching = normalizeBatch(batch);
+  const auth = normalizeAuth(authorization);
+
   function processJson(json: GraphQLResponse) {
     if (json?.errors) {
       const gqlError = new Error(
@@ -73,8 +91,8 @@ function createFetch({
     signal?: AbortSignal,
   ): Promise<T> {
     const headers = new Headers(init?.headers);
-    if (token) {
-      headers.set(authHeader, `${authPrefix} ${token}`);
+    if (auth.token) {
+      headers.set(auth.headerName, `${auth.scheme} ${auth.token}`);
     }
     if (!headers.has('Accept')) {
       headers.set('Accept', '*/*');
@@ -143,10 +161,13 @@ function createFetch({
               }
             });
           })
+          // The catch is here instead of the 2nd then argument to ensure on
+          // general errors all sinks are closed. For individual request errors
+          // those are caught above in the loop so wouldn't make it here
           .catch(err => {
             sinks.forEach(s => s.error!(err));
           });
-      }, batchTimeout);
+      }, batching.timeoutMs);
     }
 
     batcher.bodies.push(reqBody);
@@ -170,7 +191,11 @@ function createFetch({
         ? getFormData(data, uploadables)
         : JSON.stringify(data);
 
-      if (batch && !uploadables && operation.operationKind !== 'mutation') {
+      if (
+        batching.enabled &&
+        !uploadables &&
+        operation.operationKind !== 'mutation'
+      ) {
         addToBatch(body as string, sink);
 
         return undefined;

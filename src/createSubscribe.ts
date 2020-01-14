@@ -4,88 +4,90 @@ import {
   RequestParameters,
   Variables,
 } from 'relay-runtime';
+import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 import io from 'socket.io-client';
 
-enum _APOLLO_TYPES {
-  GQL_CONNECTION_INIT = 'connection_init', // Client -> Server
-  GQL_CONNECTION_ACK = 'connection_ack', // Server -> Client
-  GQL_CONNECTION_ERROR = 'connection_error', // Server -> Client
-
-  // NOTE: The keep alive message type does not follow the standard due to connection optimizations
-  GQL_CONNECTION_KEEP_ALIVE = 'ka', // Server -> Client
-
-  GQL_CONNECTION_TERMINATE = 'connection_terminate', // Client -> Server
-  GQL_START = 'start', // Client -> Server
-  GQL_DATA = 'data', // Server -> Client
-  GQL_ERROR = 'error', // Server -> Client
-  GQL_COMPLETE = 'complete', // Server -> Client
-  GQL_STOP = 'stop', // Client -> Server
-}
-
-export interface SubscriptionOptions {
+export interface SubscriptionClientOptions {
   url?: string;
   token?: string;
   maxSubscriptions?: number;
 }
 
-export default function createSubscribe({
-  token,
-  url = '/socket.io/graphql',
-  maxSubscriptions = 200,
-}: SubscriptionOptions = {}) {
-  let nextSubscriptionId = 0;
-  const subscriptions = new Map();
+interface SubscriptionClient {
+  subscribe(
+    operation: RequestParameters,
+    variables: Variables,
+  ): Observable<GraphQLResponse>;
 
-  let origin, path;
-  try {
-    const parsed = new URL(url);
-    origin = parsed.origin;
-    path = parsed.pathname;
-  } catch (err) {
-    origin = window.location.origin;
-    path = url;
-  }
+  close?(): void | Promise<void>;
+}
 
-  const socket = io(origin, { path, transports: ['websocket'] });
+interface SubscriptionClientClass {
+  new (...args: any): SubscriptionClient;
+}
 
-  function emitTransient(event: string, ...args: any[]) {
-    // For transient state management, we re-emit on reconnect anyway, so no
-    // need to use the send buffer.
-    if (!socket.connected) {
-      return;
+export class SocketioSubscriptionClient implements SubscriptionClient {
+  private nextSubscriptionId = 0;
+
+  private subscriptions = new Map<
+    number,
+    {
+      variables: Variables;
+      query: string | null | undefined;
+      sink: Sink<GraphQLResponse>;
+    }
+  >();
+
+  readonly socket: SocketIOClient.Socket;
+
+  readonly maxSubscriptions: number;
+
+  constructor({
+    token,
+    url = '/socket.io/graphql',
+    maxSubscriptions = 200,
+  }: SubscriptionClientOptions = {}) {
+    this.maxSubscriptions = maxSubscriptions;
+
+    let origin, path;
+    try {
+      const parsed = new URL(url);
+      origin = parsed.origin;
+      path = parsed.pathname;
+    } catch (err) {
+      origin = window.location.origin;
+      path = url;
     }
 
-    socket.emit(event, ...args);
-  }
+    const socket = io(origin, { path, transports: ['websocket'] });
 
-  function subscribe(id: number, { query, variables }: any) {
-    emitTransient('subscribe', { id, query, variables });
-  }
+    this.socket = socket;
 
-  socket
-    .on('connect', () => {
-      if (token) {
-        emitTransient('authenticate', token);
-      }
+    socket
+      .on('connect', () => {
+        if (token) {
+          this.emitTransient('authenticate', token);
+        }
 
-      subscriptions.forEach((subscription, id) => {
-        subscribe(id, subscription);
+        this.subscriptions.forEach((subscription, id) => {
+          this.emitSubscribe(id, subscription);
+        });
+      })
+      .on('subscription update', ({ id, ...payload }: any) => {
+        const subscription = this.subscriptions.get(id);
+        if (!subscription) {
+          return;
+        }
+
+        subscription.sink.next(payload);
       });
-    })
-    .on('subscription update', ({ id, ...payload }: any) => {
-      const subscription = subscriptions.get(id);
-      if (!subscription) {
-        return;
-      }
+  }
 
-      subscription.sink.next(payload);
-    });
-
-  function subscribeFn(operation: RequestParameters, variables: Variables) {
+  subscribe(operation: RequestParameters, variables: Variables) {
     return Observable.create<GraphQLResponse>(sink => {
-      const id = nextSubscriptionId++;
+      const id = this.nextSubscriptionId++;
 
-      if (subscriptions.size >= maxSubscriptions) {
+      if (this.subscriptions.size >= this.maxSubscriptions) {
         if (__DEV__) {
           // eslint-disable-next-line no-console
           console.warn('subscription limit reached');
@@ -99,23 +101,56 @@ export default function createSubscribe({
         variables,
       };
 
-      subscriptions.set(id, subscription);
-      subscribe(id, subscription);
+      this.subscriptions.set(id, subscription);
+      this.emitSubscribe(id, subscription);
 
       return () => {
-        emitTransient('unsubscribe', id);
-        subscriptions.delete(id);
+        this.emitTransient('unsubscribe', id);
+        this.subscriptions.delete(id);
       };
     });
   }
 
-  subscribeFn.socket = socket;
-  subscribeFn.close = () => {
-    socket.disconnect();
-
-    subscriptions.forEach(({ sink }) => {
+  close() {
+    this.socket.disconnect();
+    this.subscriptions.forEach(({ sink }) => {
       sink.complete();
     });
+  }
+
+  private emitTransient(event: string, ...args: any[]) {
+    // For transient state management, we re-emit on reconnect anyway, so no
+    // need to use the send buffer.
+    if (!this.socket.connected) {
+      return;
+    }
+
+    this.socket.emit(event, ...args);
+  }
+
+  private emitSubscribe(id: number, { query, variables }: any) {
+    this.emitTransient('subscribe', { id, query, variables });
+  }
+}
+
+export interface SubscriptionOptions extends SubscriptionClientOptions {
+  subscriptionClientClass?: SubscriptionClientClass;
+}
+
+export default function createSubscribe({
+  subscriptionClientClass = SocketioSubscriptionClient,
+  ...options
+}: SubscriptionOptions = {}) {
+  // eslint-disable-next-line new-cap
+  const subscriptionClient = new subscriptionClientClass(options);
+
+  function subscribeFn(operation: RequestParameters, variables: Variables) {
+    return subscriptionClient.subscribe(operation, variables);
+  }
+
+  subscribeFn.client = subscriptionClient;
+  subscribeFn.close = () => {
+    subscriptionClient.close?.();
   };
 
   return subscribeFn;
