@@ -1,143 +1,123 @@
-import {
-  ConcreteBatch,
-  Middleware,
-  RelayNetworkLayer,
-  Variables,
-  authMiddleware,
-  batchMiddleware,
-  loggerMiddleware,
-  urlMiddleware,
-} from 'react-relay-network-modern';
-import { ExecuteFunction, Observable } from 'relay-runtime';
-import io from 'socket.io-client';
+import { ExecuteFunction, Network } from 'relay-runtime';
 
-// eslint-disable-next-line no-underscore-dangle
-declare const __DEV__: boolean;
+import createFetch from './createFetch';
+import createSubscribe from './createSubscribe';
+
+export interface Network {
+  execute: ExecuteFunction;
+  close: () => void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
 
 export interface NetworkLayerOptions {
-  path?: string;
-  origin: string;
-  socketPath?: string;
-  token: string;
-  authPrefix?: string;
+  /** The graphql API endpoint, provide a pathname or fully qualified url. */
+  url?: string;
+
+  /**
+   * The socket.io endpoint, provide a pathname or fully qualified url.
+   *
+   * **MUST** be provided in order to enable subscription support
+   */
+  subscriptionUrl?: string;
+
+  /**
+   * Controls the error behavior, when set, responses with an `errors` array will be turned into Errors
+   * and thrown.
+   *
+   * Defaults: `true`
+   *
+   * ref: https://github.com/facebook/relay/issues/1816#issuecomment-304492071
+   */
+  throwErrors?: boolean;
+
+  /**
+   * Batches requests within a time frame into a single request for more
+   * efficient fetching. requests are sent as a JSON array. Mutations and file uploads
+   * are NOT batched.
+   *
+   * Defaults to `true`.
+   *
+   * **Requires a Graphql server that understands batching"
+   */
+  batch?:
+    | boolean
+    | {
+        enabled: boolean;
+
+        /**
+         * The amount of time to wait before a batch is closed and sent to the server.
+         *
+         * The default is `0ms`, or about the next tick of the event loop.
+         */
+        timeoutMs?: number;
+      };
+
+  /** The authorization configuration or token for a convenient shorthand */
+  authorization?:
+    | null
+    | string
+    | {
+        token: string;
+        /** The header the `token` is sent in defaults to "Authorization" */
+        headerName?: string;
+
+        /** The prefix string in the auth header defaults to "Bearer" */
+        scheme?: string;
+      };
+
+  /**
+   * Any fetch API "init" details, this is based directly to the `fetch` call, see
+   * [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) for API details.
+   */
+  init?: RequestInit;
+
+  /**
+   * The max number of concurrent subscriptions allowed.
+   * After the number has been no more will be set to the server (a console.warn is issued informing you the limit has been reached)
+   *
+   * The default is: `200`
+   */
   maxSubscriptions?: number;
 }
 
-export default class NetworkLayer {
-  private readonly socket: SocketIOClient.Socket;
+const SimpleNetworkLayer = {
+  create({
+    url = '/graphql',
+    subscriptionUrl,
+    throwErrors,
+    authorization,
+    init,
+    batch,
+    maxSubscriptions,
+  }: NetworkLayerOptions = {}) {
+    const subscribeFn = subscriptionUrl
+      ? createSubscribe({
+          token:
+            typeof authorization === 'string'
+              ? authorization
+              : authorization?.token,
+          maxSubscriptions,
+          url: subscriptionUrl,
+        })
+      : undefined;
 
-  private readonly subscriptions = new Map();
-
-  private readonly maxSubscriptions: number;
-
-  private nextSubscriptionId = 0;
-
-  readonly execute: ExecuteFunction;
-
-  constructor({
-    token,
-    authPrefix,
-    origin,
-    socketPath = '/socket.io/graphql',
-    path = '/graphql',
-    maxSubscriptions = 200,
-  }: NetworkLayerOptions) {
-    const url = `${origin}${path}`;
-
-    this.maxSubscriptions = maxSubscriptions;
-
-    this.socket = io(origin, {
-      path: socketPath,
-      transports: ['websocket'],
-    });
-
-    this.socket.on('connect', () => {
-      if (token) {
-        this.emitTransient('authenticate', token);
-      }
-
-      this.subscriptions.forEach((subscription, id) => {
-        this.subscribe(id, subscription);
-      });
-    });
-
-    this.socket.on('subscription update', ({ id, ...payload }: any) => {
-      const subscription = this.subscriptions.get(id);
-      if (!subscription) {
-        return;
-      }
-
-      subscription.sink.next(payload);
-    });
-
-    const network = new RelayNetworkLayer(
-      [
-        __DEV__ && loggerMiddleware(),
-        urlMiddleware({ url }),
-        batchMiddleware({ batchUrl: url }),
-        authMiddleware({
-          token,
-          prefix: authPrefix,
-          allowEmptyToken: true,
-        }),
-      ].filter(Boolean) as Middleware[],
-      {
-        subscribeFn: this.subscribeFn,
-      },
+    const network: any = Network.create(
+      createFetch({
+        authorization,
+        throwErrors,
+        init,
+        batch,
+        url,
+      }),
+      subscribeFn,
     );
-    // @ts-ignore
-    this.execute = network.execute;
-  }
 
-  subscribeFn = (operation: ConcreteBatch, variables: Variables) =>
-    // @ts-ignore
-    new Observable(sink => {
-      const id = this.nextSubscriptionId++;
+    network.close = subscribeFn?.close || noop;
 
-      if (this.subscriptions.size >= this.maxSubscriptions) {
-        if (__DEV__) {
-          // eslint-disable-next-line no-console
-          console.warn('subscription limit reached');
-        }
-        return undefined;
-      }
+    return network as Network;
+  },
+};
 
-      const subscription = {
-        sink,
-        query: operation.text,
-        variables,
-      };
-
-      this.subscriptions.set(id, subscription);
-      this.subscribe(id, subscription);
-
-      return {
-        unsubscribe: () => {
-          this.emitTransient('unsubscribe', id);
-          this.subscriptions.delete(id);
-        },
-      };
-    });
-
-  subscribe(id: number, { query, variables }: any) {
-    this.emitTransient('subscribe', { id, query, variables });
-  }
-
-  emitTransient(event: string, ...args: any[]) {
-    // For transient state management, we re-emit on reconnect anyway, so no
-    // need to use the send buffer.
-    if (!this.socket.connected) {
-      return;
-    }
-
-    this.socket.emit(event, ...args);
-  }
-
-  close() {
-    this.socket.disconnect();
-
-    this.subscriptions.forEach(({ sink }) => {
-      sink.complete();
-    });
-  }
-}
+export default SimpleNetworkLayer;

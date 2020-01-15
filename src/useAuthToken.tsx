@@ -6,9 +6,9 @@ import useTimeout from '@restart/hooks/useTimeout';
 import LocalTokenStorage, {
   TokenResponse,
   TokenStorage,
-} from './localTokenStorage';
+} from './LocalTokenStorage';
 
-export interface TokenOptions {
+export interface UseAuthTokenOptions {
   /**
    * Time, in milliseconds, to run expired token callback ahead of the
    * actual token expiration
@@ -30,7 +30,7 @@ export default function useAuthToken<
   onTokenExpired,
   leeway = 0,
   tokenStorage = localTokenStorage,
-}: TokenOptions) {
+}: UseAuthTokenOptions) {
   const timeout = useTimeout();
 
   const [
