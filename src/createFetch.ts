@@ -14,6 +14,7 @@ export interface FetchOptions {
   init?: RequestInit;
   throwErrors?: boolean;
   authorization?:
+    | null
     | string
     | {
         token: string;
@@ -64,7 +65,7 @@ function normalizeBatch(batch: FetchOptions['batch'] = true) {
 
 function normalizeAuth(auth: FetchOptions['authorization'] = '') {
   const p = typeof auth === 'string' ? { token: auth } : auth;
-  return { scheme: 'Bearer', headerName: 'Authorization', ...p };
+  return { token: '', scheme: 'Bearer', headerName: 'Authorization', ...p };
 }
 
 function createFetch({

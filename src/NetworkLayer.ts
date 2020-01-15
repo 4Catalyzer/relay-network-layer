@@ -54,11 +54,9 @@ export interface NetworkLayerOptions {
         timeoutMs?: number;
       };
 
-  /** An authorization token sent in a header with every request */
-  token?: string;
-
   /** The authorization configuration or token for a convenient shorthand */
   authorization?:
+    | null
     | string
     | {
         token: string;
@@ -86,18 +84,20 @@ export interface NetworkLayerOptions {
 
 const SimpleNetworkLayer = {
   create({
-    token,
+    url = '/graphql',
     subscriptionUrl,
-    maxSubscriptions,
-    authorization,
     throwErrors,
+    authorization,
     init,
     batch,
-    url = '/graphql',
+    maxSubscriptions,
   }: NetworkLayerOptions = {}) {
     const subscribeFn = subscriptionUrl
       ? createSubscribe({
-          token,
+          token:
+            typeof authorization === 'string'
+              ? authorization
+              : authorization?.token,
           maxSubscriptions,
           url: subscriptionUrl,
         })
@@ -111,16 +111,7 @@ const SimpleNetworkLayer = {
         batch,
         url,
       }),
-      subscriptionUrl
-        ? createSubscribe({
-            token:
-              typeof authorization === 'string'
-                ? authorization
-                : authorization?.token,
-            maxSubscriptions,
-            url: subscriptionUrl,
-          })
-        : undefined,
+      subscribeFn,
     );
 
     network.close = subscribeFn?.close || noop;

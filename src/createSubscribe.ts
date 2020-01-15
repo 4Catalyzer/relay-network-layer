@@ -6,6 +6,7 @@ import {
 } from 'relay-runtime';
 import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 import io from 'socket.io-client';
+import { Class } from 'utility-types';
 
 export interface SubscriptionClientOptions {
   url?: string;
@@ -22,11 +23,7 @@ interface SubscriptionClient {
   close?(): void | Promise<void>;
 }
 
-interface SubscriptionClientClass {
-  new (...args: any): SubscriptionClient;
-}
-
-export class SocketioSubscriptionClient implements SubscriptionClient {
+export class SocketIoSubscriptionClient implements SubscriptionClient {
   private nextSubscriptionId = 0;
 
   private subscriptions = new Map<
@@ -134,11 +131,11 @@ export class SocketioSubscriptionClient implements SubscriptionClient {
 }
 
 export interface SubscriptionOptions extends SubscriptionClientOptions {
-  subscriptionClientClass?: SubscriptionClientClass;
+  subscriptionClientClass?: Class<SubscriptionClient>;
 }
 
 export default function createSubscribe({
-  subscriptionClientClass = SocketioSubscriptionClient,
+  subscriptionClientClass = SocketIoSubscriptionClient,
   ...options
 }: SubscriptionOptions = {}) {
   // eslint-disable-next-line new-cap

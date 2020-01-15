@@ -182,9 +182,6 @@ interface NetworkLayerOptions {
         timeoutMs?: number;
       };
 
-  /** An authorization token sent in a header with every request */
-  token?: string;
-
   /** The authorization configuration or token for a convenient shorthand */
   authorization?:
     | string

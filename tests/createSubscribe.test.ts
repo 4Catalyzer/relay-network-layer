@@ -6,7 +6,7 @@ import {
 import { reset, serverEmit } from 'socket.io-client';
 
 import createSubscribe, {
-  SocketioSubscriptionClient,
+  SocketIoSubscriptionClient,
 } from '../src/createSubscribe';
 
 describe('createSubscribe', () => {
@@ -30,7 +30,7 @@ describe('createSubscribe', () => {
   });
 
   it('should connect', () => {
-    const { socket } = createSubscribe().client as SocketioSubscriptionClient;
+    const { socket } = createSubscribe().client as SocketIoSubscriptionClient;
 
     jest.runOnlyPendingTimers();
 
@@ -45,7 +45,7 @@ describe('createSubscribe', () => {
 
   it('should handle relative path', () => {
     const { socket } = createSubscribe({ url: '/graphql' })
-      .client as SocketioSubscriptionClient;
+      .client as SocketIoSubscriptionClient;
 
     // @ts-ignore
     expect(socket.origin).toEqual('http://localhost');
@@ -55,7 +55,7 @@ describe('createSubscribe', () => {
 
   it('should parse absolute url', () => {
     const { socket } = createSubscribe({ url: 'https://foo.com/gql' })
-      .client as SocketioSubscriptionClient;
+      .client as SocketIoSubscriptionClient;
 
     // @ts-ignore
     expect(socket.origin).toEqual('https://foo.com');
@@ -66,7 +66,7 @@ describe('createSubscribe', () => {
   it('should authenticate', () => {
     const token = 'foo';
     const { socket } = createSubscribe({ token })
-      .client as SocketioSubscriptionClient;
+      .client as SocketIoSubscriptionClient;
 
     jest.runAllTimers();
 
@@ -75,7 +75,7 @@ describe('createSubscribe', () => {
 
   it('should immediately emit pending subscriptions', () => {
     const subscribe = createSubscribe();
-    const client = subscribe.client as SocketioSubscriptionClient;
+    const client = subscribe.client as SocketIoSubscriptionClient;
     run(
       subscribe(
         {
@@ -118,7 +118,7 @@ describe('createSubscribe', () => {
   it('should subscribe', () => {
     const subscribe = createSubscribe();
 
-    const client = subscribe.client as SocketioSubscriptionClient;
+    const client = subscribe.client as SocketIoSubscriptionClient;
 
     jest.runAllTimers();
 
@@ -144,7 +144,7 @@ describe('createSubscribe', () => {
 
   it('should match subs by id', () => {
     const subscribe = createSubscribe();
-    const client = subscribe.client as SocketioSubscriptionClient;
+    const client = subscribe.client as SocketIoSubscriptionClient;
 
     const observer = {
       next: jest.fn(),
@@ -182,7 +182,7 @@ describe('createSubscribe', () => {
 
   it('should clean up', () => {
     const subscribe = createSubscribe();
-    const client = subscribe.client as SocketioSubscriptionClient;
+    const client = subscribe.client as SocketIoSubscriptionClient;
 
     const observer = {
       next: jest.fn(),
