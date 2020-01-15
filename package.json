@@ -5,7 +5,7 @@
   "module": "lib/es/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/4Catalyzer/relay-auth.git"
+    "url": "git+https://github.com/4Catalyzer/relay-network-layer.git"
   },
   "author": {
     "name": "4Catalyzer"
@@ -104,9 +104,7 @@
     "utility-types": "^3.10.0"
   },
   "bugs": {
-    "url": "https://github.com/4Catalyzer/relay-auth/issues"
+    "url": "https://github.com/4Catalyzer/relay-network-layer/issues"
   },
-  "readme": "ERROR: No README data found!",
-  "homepage": "https://github.com/4Catalyzer/relay-auth#readme",
-  "_id": "relay-network-layer@1.1.1"
+  "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme"
 }
