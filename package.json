@@ -22,7 +22,8 @@
     "testonly": "jest"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "directory": "lib"
   },
   "prettier": "@4c/prettier-config",
   "husky": {
@@ -52,7 +53,7 @@
     }
   },
   "release": {
-    "publishDir": "lib"
+    "conventionalCommits": true
   },
   "peerDependencies": {
     "react": "^16.8.6",
