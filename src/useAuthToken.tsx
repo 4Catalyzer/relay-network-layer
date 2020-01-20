@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import useEventCallback from '@restart/hooks/useEventCallback';
 import useStateAsync from '@restart/hooks/useStateAsync';
 import useTimeout from '@restart/hooks/useTimeout';
@@ -7,6 +7,8 @@ import LocalTokenStorage, {
   TokenResponse,
   TokenStorage,
 } from './LocalTokenStorage';
+
+const MAX_DELAY_MS = 2 ** 31 - 1;
 
 export interface UseAuthTokenOptions {
   /**
@@ -24,6 +26,33 @@ export interface UseAuthTokenOptions {
 
 const localTokenStorage = new LocalTokenStorage();
 
+/*
+ * Browsers including Internet Explorer, Chrome, Safari, and Firefox store the
+ * delay as a 32-bit signed integer internally. This causes an integer overflow
+ * when using delays larger than 2,147,483,647 ms (about 24.8 days),
+ * resulting in the timeout being executed immediately.
+ *
+ * via: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout
+ */
+function useSafeTimeout() {
+  const timeout = useTimeout();
+  return useMemo(() => {
+    function set(fn: () => void, ms = 0): void {
+      if (ms > MAX_DELAY_MS) {
+        const leftMs = ms - MAX_DELAY_MS;
+        timeout.set(() => set(fn, leftMs), MAX_DELAY_MS);
+        return;
+      }
+      timeout.set(fn, ms);
+    }
+
+    return {
+      ...timeout,
+      set,
+    };
+  }, [timeout]);
+}
+
 export default function useAuthToken<
   TTokenResponse extends TokenResponse = TokenResponse
 >({
@@ -31,7 +60,7 @@ export default function useAuthToken<
   leeway = 0,
   tokenStorage = localTokenStorage,
 }: UseAuthTokenOptions) {
-  const timeout = useTimeout();
+  const timeout = useSafeTimeout();
 
   const [
     tokenResponse,
