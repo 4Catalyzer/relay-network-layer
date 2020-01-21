@@ -11,7 +11,7 @@ import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 
 export interface FetchOptions {
   url?: string;
-  init?: RequestInit;
+  init?: RequestInit | (() => RequestInit);
   throwErrors?: boolean;
   authorization?:
     | null
@@ -70,7 +70,7 @@ function normalizeAuth(auth: FetchOptions['authorization'] = '') {
 
 function createFetch({
   url = '/graphql',
-  init,
+  init: initOrThunk,
   authorization,
   throwErrors = true,
   batch,
@@ -93,6 +93,9 @@ function createFetch({
     body: string | FormData,
     signal?: AbortSignal,
   ): Promise<T> {
+    const init =
+      typeof initOrThunk === 'function' ? initOrThunk() : initOrThunk;
+
     const headers = new Headers(init?.headers);
     if (auth.token) {
       headers.set(auth.headerName, `${auth.scheme} ${auth.token}`);

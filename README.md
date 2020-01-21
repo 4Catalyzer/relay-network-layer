@@ -198,7 +198,7 @@ interface NetworkLayerOptions {
    * Any fetch API "init" details, this is based directly to the `fetch` call, see
    * [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) for API details.
    */
-  init?: RequestInit;
+  init?: RequestInit | (() => RequestInit);
 
   /**
    * The max number of concurrent subscriptions allowed.
