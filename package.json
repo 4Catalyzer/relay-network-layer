@@ -1,6 +1,6 @@
 {
   "name": "relay-network-layer",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "main": "lib/index.js",
   "module": "lib/es/index.js",
   "repository": {
@@ -106,5 +106,7 @@
   "bugs": {
     "url": "https://github.com/4Catalyzer/relay-network-layer/issues"
   },
-  "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme"
+  "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme",
+  "readme": "ERROR: No README data found!",
+  "_id": "relay-network-layer@1.1.2"
 }
