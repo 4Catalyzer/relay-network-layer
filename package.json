@@ -95,7 +95,7 @@
     "whatwg-fetch": "^3.0.0"
   },
   "dependencies": {
-    "@restart/hooks": "^0.3.19",
+    "@restart/hooks": "^0.3.20",
     "@types/react": "^16.9.17",
     "@types/relay-runtime": "^8.0.0",
     "@types/store": "^2.0.2",
