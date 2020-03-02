@@ -1,3 +1,14 @@
+## [1.2.1](https://github.com/4Catalyzer/relay-network-layer/compare/v1.2.0...v1.2.1) (2020-03-02)
+
+
+### Bug Fixes
+
+* Don't show "about to expire" for expired sessions ([#8](https://github.com/4Catalyzer/relay-network-layer/issues/8)) ([d8fdd01](https://github.com/4Catalyzer/relay-network-layer/commit/d8fdd01))
+
+
+
+
+
 # [1.2.0](https://github.com/4Catalyzer/relay-network-layer/compare/v1.1.2...v1.2.0) (2020-01-23)
 
 
