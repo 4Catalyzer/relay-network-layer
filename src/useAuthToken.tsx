@@ -36,9 +36,15 @@ export default function useAuthToken<
   const [
     tokenResponse,
     setTokenResponse,
-  ] = useStateAsync<TTokenResponse | null>(
-    () => tokenStorage.load() as TTokenResponse,
-  );
+  ] = useStateAsync<TTokenResponse | null>(() => {
+    const initialTokenResponse = tokenStorage.load() as TTokenResponse | null;
+    if (initialTokenResponse && initialTokenResponse.expiresAt < Date.now()) {
+      tokenStorage.clear();
+      return null;
+    }
+
+    return initialTokenResponse;
+  });
 
   const scheduleExpireTokenResponse = useEventCallback(
     (nextTokenResponse: TokenResponse) => {
