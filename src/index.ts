@@ -1,17 +1,32 @@
-import createFetch from './createFetch';
-import createSubscribe from './createSubscribe';
+/* eslint-disable import/no-duplicates, import/order */
 import LocalTokenStorage from './LocalTokenStorage';
 import NetworkLayer from './NetworkLayer';
+import createFetch from './createFetch';
+import createSubscribe from './createSubscribe';
 import useAuthToken from './useAuthToken';
 
-import type { FetchOptions } from './createFetch';
-import type { SubscriptionClientOptions, SubscriptionOptions } from './createSubscribe';
-import type { TokenResponse, TokenStorage } from './LocalTokenStorage';
-import type { Network } from './NetworkLayer';
-import type { UseAuthTokenOptions } from './useAuthToken';
+// FIXME: These should be type imports.
+import { TokenResponse, TokenStorage } from './LocalTokenStorage';
+import { Network } from './NetworkLayer';
+import { FetchOptions } from './createFetch';
+import {
+  SubscriptionClientOptions,
+  SubscriptionOptions,
+} from './createSubscribe';
+import { UseAuthTokenOptions } from './useAuthToken';
+/* eslint-enable import/no-duplicates, import/order */
 
 export default NetworkLayer;
 
 export { createFetch, createSubscribe, LocalTokenStorage, useAuthToken };
 
-export type { FetchOptions, SubscriptionClientOptions, SubscriptionOptions, TokenResponse, TokenStorage, Network, UseAuthTokenOptions };
+// FIXME: These should be type exports.
+export {
+  FetchOptions,
+  SubscriptionClientOptions,
+  SubscriptionOptions,
+  TokenResponse,
+  TokenStorage,
+  Network,
+  UseAuthTokenOptions,
+};
