@@ -15,7 +15,7 @@ export interface SubscriptionClientOptions {
   maxSubscriptions?: number;
 }
 
-interface SubscriptionClient {
+export interface SubscriptionClient {
   subscribe(
     operation: RequestParameters,
     variables: Variables,
