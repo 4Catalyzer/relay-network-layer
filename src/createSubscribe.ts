@@ -11,7 +11,7 @@ import { Class } from 'utility-types';
 
 export interface SubscriptionClientOptions {
   url?: string;
-  token?: string;
+  token?: string | null;
   maxSubscriptions?: number;
 }
 
@@ -38,11 +38,13 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
 
   readonly socket: SocketIOClient.Socket;
 
+  protected token: string | null = null;
+
   readonly maxSubscriptions: number;
 
   constructor({
     url = '/socket.io/graphql',
-    token,
+    token = null,
     maxSubscriptions = 200,
   }: SubscriptionClientOptions = {}) {
     this.maxSubscriptions = maxSubscriptions;
@@ -60,12 +62,11 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     const socket = io(origin, { path, transports: ['websocket'] });
 
     this.socket = socket;
+    this.token = token;
 
     socket
       .on('connect', () => {
-        if (token) {
-          this.emitTransient('authenticate', token);
-        }
+        this.authenticate();
 
         this.subscriptions.forEach((subscription, id) => {
           this.emitSubscribe(id, subscription);
@@ -79,6 +80,12 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
 
         subscription.sink.next(payload);
       });
+  }
+
+  protected authenticate() {
+    if (this.token) {
+      this.emitTransient('authenticate', this.token);
+    }
   }
 
   subscribe(operation: RequestParameters, variables: Variables) {
@@ -116,7 +123,7 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     });
   }
 
-  emitTransient(event: string, ...args: any[]) {
+  protected emitTransient(event: string, ...args: any[]) {
     // For transient state management, we re-emit on reconnect anyway, so no
     //  need to use the send buffer.
     if (!this.socket.connected) {
