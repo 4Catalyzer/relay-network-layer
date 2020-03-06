@@ -116,9 +116,9 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     });
   }
 
-  private emitTransient(event: string, ...args: any[]) {
+  emitTransient(event: string, ...args: any[]) {
     // For transient state management, we re-emit on reconnect anyway, so no
-    // need to use the send buffer.
+    //  need to use the send buffer.
     if (!this.socket.connected) {
       return;
     }
