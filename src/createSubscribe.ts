@@ -83,9 +83,11 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
   }
 
   protected authenticate() {
-    if (this.token) {
-      this.emitTransient('authenticate', this.token);
+    if (!this.token) {
+      return;
     }
+
+    this.emitTransient('authenticate', this.token);
   }
 
   subscribe(operation: RequestParameters, variables: Variables) {
