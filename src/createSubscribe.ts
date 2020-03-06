@@ -1,4 +1,5 @@
 import {
+  SubscribeFunction as BaseSubscribeFunction,
   GraphQLResponse,
   Observable,
   RequestParameters,
@@ -40,8 +41,8 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
   readonly maxSubscriptions: number;
 
   constructor({
-    token,
     url = '/socket.io/graphql',
+    token,
     maxSubscriptions = 200,
   }: SubscriptionClientOptions = {}) {
     this.maxSubscriptions = maxSubscriptions;
@@ -130,17 +131,25 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
   }
 }
 
-export interface SubscriptionOptions extends SubscriptionClientOptions {
-  subscriptionClientClass?: Class<SubscriptionClient>;
+export interface SubscriptionOptions<
+  TSubscriptionClient extends SubscriptionClient
+> {
+  subscriptionClientClass: Class<TSubscriptionClient>;
+  url?: string;
+  token?: string;
+  maxSubscriptions?: number;
 }
 
-export default function createSubscribe({
-  subscriptionClientClass = SocketIoSubscriptionClient,
-  ...options
-}: SubscriptionOptions = {}) {
-  // eslint-disable-next-line new-cap
-  const subscriptionClient = new subscriptionClientClass(options);
+export interface SubscribeFunction<
+  TSubscriptionClient extends SubscriptionClient
+> extends BaseSubscribeFunction {
+  client: TSubscriptionClient;
+  close(): void | Promise<void>;
+}
 
+function createSubscribeImpl<TSubscriptionClient extends SubscriptionClient>(
+  subscriptionClient: TSubscriptionClient,
+): SubscribeFunction<TSubscriptionClient> {
   function subscribeFn(operation: RequestParameters, variables: Variables) {
     return subscriptionClient.subscribe(operation, variables);
   }
@@ -152,3 +161,22 @@ export default function createSubscribe({
 
   return subscribeFn;
 }
+
+function createSubscribe(
+  options?: SubscriptionClientOptions,
+): SubscribeFunction<SocketIoSubscriptionClient>;
+function createSubscribe<TSubscriptionClient extends SubscriptionClient>(
+  options: SubscriptionOptions<TSubscriptionClient>,
+): SubscribeFunction<TSubscriptionClient>;
+function createSubscribe(options: any): any {
+  if (!options?.subscriptionClientClass) {
+    return createSubscribeImpl(new SocketIoSubscriptionClient(options));
+  }
+
+  const { subscriptionClientClass, ...clientOptions } = options;
+
+  // eslint-disable-next-line new-cap
+  return createSubscribeImpl(new subscriptionClientClass(clientOptions));
+}
+
+export default createSubscribe;
