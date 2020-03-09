@@ -1,7 +1,7 @@
-import createFetch from './createFetch';
-import createSubscribe from './createSubscribe';
 import LocalTokenStorage from './LocalTokenStorage';
 import NetworkLayer from './NetworkLayer';
+import createFetch from './createFetch';
+import createSubscribe from './createSubscribe';
 import useAuthToken from './useAuthToken';
 
 export type FetchOptions = import('./createFetch').FetchOptions;

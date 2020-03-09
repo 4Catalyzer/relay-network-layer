@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
 import useEventCallback from '@restart/hooks/useEventCallback';
 import useStateAsync from '@restart/hooks/useStateAsync';
 import useTimeout from '@restart/hooks/useTimeout';
+import { useCallback, useEffect } from 'react';
 
 import LocalTokenStorage, {
   TokenResponse,
