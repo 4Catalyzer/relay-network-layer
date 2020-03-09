@@ -72,6 +72,7 @@
     "@types/jest": "^25.1.4",
     "@types/socket.io-client": "^1.4.32",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
     "eslint": "^6.8.0",
     "eslint-config-4catalyzer-jest": "^2.0.5",
     "eslint-config-4catalyzer-react": "^1.0.5",
