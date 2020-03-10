@@ -7,16 +7,19 @@ import createSubscribe, {
 } from './createSubscribe';
 import useAuthToken from './useAuthToken';
 
-// FIXME: These should be type imports.
-import { TokenResponse, TokenStorage } from './LocalTokenStorage';
-import { Network } from './NetworkLayer';
-import { FetchOptions } from './createFetch';
+// FIXME: These should use import type.
 import {
-  SubscriptionClient,
-  SubscriptionClientOptions,
-  SubscriptionOptions,
+  TokenResponse as TokenResponseT,
+  TokenStorage as TokenStorageT,
+} from './LocalTokenStorage';
+import { Network as NetworkT } from './NetworkLayer';
+import { FetchOptions as FetchOptionsT } from './createFetch';
+import {
+  SubscriptionClientOptions as SubscriptionClientOptionsT,
+  SubscriptionClient as SubscriptionClientT,
+  SubscriptionOptions as SubscriptionOptionsT,
 } from './createSubscribe';
-import { UseAuthTokenOptions } from './useAuthToken';
+import { UseAuthTokenOptions as UseAuthTokenOptionsT } from './useAuthToken';
 /* eslint-enable import/no-duplicates, import/order */
 
 export default NetworkLayer;
@@ -29,14 +32,14 @@ export {
   useAuthToken,
 };
 
-// FIXME: These should be type exports.
-export {
-  FetchOptions,
-  Network,
-  SubscriptionClient,
-  SubscriptionClientOptions,
-  SubscriptionOptions,
-  TokenResponse,
-  TokenStorage,
-  UseAuthTokenOptions,
-};
+// FIXME: These should use export type.
+export type FetchOptions = FetchOptionsT;
+export type Network = NetworkT;
+export type SubscriptionClient = SubscriptionClientT;
+export type SubscriptionClientOptions = SubscriptionClientOptionsT;
+export type SubscriptionOptions<
+  TSubscriptionClient extends SubscriptionClientT
+> = SubscriptionOptionsT<TSubscriptionClient>;
+export type TokenResponse = TokenResponseT;
+export type TokenStorage = TokenStorageT;
+export type UseAuthTokenOptions = UseAuthTokenOptionsT;
