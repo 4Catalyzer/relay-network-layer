@@ -11,6 +11,10 @@
     "name": "4Catalyzer"
   },
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/4Catalyzer/relay-network-layer/issues"
+  },
+  "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme",
   "scripts": {
     "build": "4c build src",
     "format": "4c format src './*'",
@@ -100,11 +104,5 @@
     "socket.io-client": "^2.3.0",
     "store": "^2.0.12",
     "utility-types": "^3.10.0"
-  },
-  "bugs": {
-    "url": "https://github.com/4Catalyzer/relay-network-layer/issues"
-  },
-  "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme",
-  "readme": "ERROR: No README data found!",
-  "_id": "relay-network-layer@1.2.0"
+  }
 }

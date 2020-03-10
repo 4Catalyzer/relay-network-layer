@@ -1,4 +1,5 @@
 import {
+  SubscribeFunction as BaseSubscribeFunction,
   GraphQLResponse,
   Observable,
   RequestParameters,
@@ -10,11 +11,11 @@ import { Class } from 'utility-types';
 
 export interface SubscriptionClientOptions {
   url?: string;
-  token?: string;
+  token?: string | null;
   maxSubscriptions?: number;
 }
 
-interface SubscriptionClient {
+export interface SubscriptionClient {
   subscribe(
     operation: RequestParameters,
     variables: Variables,
@@ -37,11 +38,13 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
 
   readonly socket: SocketIOClient.Socket;
 
+  protected token: string | null = null;
+
   readonly maxSubscriptions: number;
 
   constructor({
-    token,
     url = '/socket.io/graphql',
+    token = null,
     maxSubscriptions = 200,
   }: SubscriptionClientOptions = {}) {
     this.maxSubscriptions = maxSubscriptions;
@@ -59,12 +62,11 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     const socket = io(origin, { path, transports: ['websocket'] });
 
     this.socket = socket;
+    this.token = token;
 
     socket
       .on('connect', () => {
-        if (token) {
-          this.emitTransient('authenticate', token);
-        }
+        this.authenticate();
 
         this.subscriptions.forEach((subscription, id) => {
           this.emitSubscribe(id, subscription);
@@ -78,6 +80,14 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
 
         subscription.sink.next(payload);
       });
+  }
+
+  protected authenticate() {
+    if (!this.token) {
+      return;
+    }
+
+    this.emitTransient('authenticate', this.token);
   }
 
   subscribe(operation: RequestParameters, variables: Variables) {
@@ -115,9 +125,9 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     });
   }
 
-  private emitTransient(event: string, ...args: any[]) {
+  protected emitTransient(event: string, ...args: any[]) {
     // For transient state management, we re-emit on reconnect anyway, so no
-    // need to use the send buffer.
+    //  need to use the send buffer.
     if (!this.socket.connected) {
       return;
     }
@@ -130,17 +140,25 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
   }
 }
 
-export interface SubscriptionOptions extends SubscriptionClientOptions {
-  subscriptionClientClass?: Class<SubscriptionClient>;
+export interface SubscriptionOptions<
+  TSubscriptionClient extends SubscriptionClient
+> {
+  subscriptionClientClass: Class<TSubscriptionClient>;
+  url?: string;
+  token?: string;
+  maxSubscriptions?: number;
 }
 
-export default function createSubscribe({
-  subscriptionClientClass = SocketIoSubscriptionClient,
-  ...options
-}: SubscriptionOptions = {}) {
-  // eslint-disable-next-line new-cap
-  const subscriptionClient = new subscriptionClientClass(options);
+export interface SubscribeFunction<
+  TSubscriptionClient extends SubscriptionClient
+> extends BaseSubscribeFunction {
+  client: TSubscriptionClient;
+  close(): void | Promise<void>;
+}
 
+function createSubscribeImpl<TSubscriptionClient extends SubscriptionClient>(
+  subscriptionClient: TSubscriptionClient,
+): SubscribeFunction<TSubscriptionClient> {
   function subscribeFn(operation: RequestParameters, variables: Variables) {
     return subscriptionClient.subscribe(operation, variables);
   }
@@ -152,3 +170,22 @@ export default function createSubscribe({
 
   return subscribeFn;
 }
+
+function createSubscribe(
+  options?: SubscriptionClientOptions,
+): SubscribeFunction<SocketIoSubscriptionClient>;
+function createSubscribe<TSubscriptionClient extends SubscriptionClient>(
+  options: SubscriptionOptions<TSubscriptionClient>,
+): SubscribeFunction<TSubscriptionClient>;
+function createSubscribe(options: any): any {
+  if (!options?.subscriptionClientClass) {
+    return createSubscribeImpl(new SocketIoSubscriptionClient(options));
+  }
+
+  const { subscriptionClientClass, ...clientOptions } = options;
+
+  // eslint-disable-next-line new-cap
+  return createSubscribeImpl(new subscriptionClientClass(clientOptions));
+}
+
+export default createSubscribe;
