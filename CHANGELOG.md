@@ -1,3 +1,14 @@
+## [1.3.1](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.0...v1.3.1) (2020-03-11)
+
+
+### Bug Fixes
+
+* Strip compiled type-only exports ([#17](https://github.com/4Catalyzer/relay-network-layer/issues/17)) ([3fa348a](https://github.com/4Catalyzer/relay-network-layer/commit/3fa348ab1aeec8eeea7048824dcd5553baa653f5))
+
+
+
+
+
 # [1.3.0](https://github.com/4Catalyzer/relay-network-layer/compare/v1.2.1...v1.3.0) (2020-03-10)
 
 
