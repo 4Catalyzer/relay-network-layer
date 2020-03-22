@@ -91,7 +91,7 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
   }
 
   subscribe(operation: RequestParameters, variables: Variables) {
-    return Observable.create<GraphQLResponse>(sink => {
+    return Observable.create<GraphQLResponse>((sink) => {
       const id = this.nextSubscriptionId++;
 
       if (this.subscriptions.size >= this.maxSubscriptions) {
