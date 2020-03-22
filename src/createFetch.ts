@@ -46,7 +46,7 @@ function getFormData(
   formData.append('query', query);
   formData.append('variables', JSON.stringify(variables));
 
-  Object.keys(uploadables).forEach(key => {
+  Object.keys(uploadables).forEach((key) => {
     formData.append(key, uploadables[key]);
   });
 
@@ -113,9 +113,9 @@ function createFetch({
       body,
       signal,
       headers,
-    }).then(resp => {
+    }).then((resp) => {
       if (!resp.ok) {
-        return resp.text().then(txt => {
+        return resp.text().then((txt) => {
           const httpError = new Error(
             `RelayNetworkLayerError: [${resp.status}]: ${txt}`,
           );
@@ -144,7 +144,7 @@ function createFetch({
         batcher = null;
 
         makeRequest<GraphQLResponse[]>(`[${bodies.join(',')}]`)
-          .then(batchResp => {
+          .then((batchResp) => {
             if (!batchResp || !Array.isArray(batchResp)) {
               throw new Error(
                 'RelayNetworkLayerError: invalid batch response, must return a JSON array',
@@ -170,8 +170,8 @@ function createFetch({
           // The catch is here instead of the 2nd then argument to ensure on
           // general errors all sinks are closed. For individual request errors
           // those are caught above in the loop so wouldn't make it here
-          .catch(err => {
-            sinks.forEach(s => s.error!(err));
+          .catch((err) => {
+            sinks.forEach((s) => s.error!(err));
           });
       }, batching.timeoutMs);
     }
@@ -189,7 +189,7 @@ function createFetch({
     // We use observables directly here instead of the promise value
     // in order to express Aborted requests unambiguously: completed with
     // no value sent.
-    return Observable.create<GraphQLResponse>(sink => {
+    return Observable.create<GraphQLResponse>((sink) => {
       const data = {
         id: operation.id || operation.name || String(uid++),
         query: operation.text || '',
@@ -217,7 +217,7 @@ function createFetch({
       makeRequest<GraphQLResponse>(body, controller?.signal)
         .then(processJson)
         .then(
-          value => {
+          (value) => {
             sink.next!(value);
             sink.complete!();
           },
