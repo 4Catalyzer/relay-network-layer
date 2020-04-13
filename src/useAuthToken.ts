@@ -73,8 +73,8 @@ export default function useAuthToken<
     [tokenStorage],
   );
 
-  return (
-    [tokenResponse, updateTokenResponse] as
-    [TTokenResponse | null, typeof updateTokenResponse]
-  );
+  return [tokenResponse, updateTokenResponse] as [
+    TTokenResponse | null,
+    typeof updateTokenResponse,
+  ];
 }
