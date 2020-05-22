@@ -32,7 +32,7 @@ export interface FetchOptions {
 export interface Data {
   id: string;
   query: string;
-  variables: {};
+  variables: Record<string, unknown>;
 }
 
 let uid = 0;
