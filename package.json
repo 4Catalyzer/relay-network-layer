@@ -7,9 +7,7 @@
     "type": "git",
     "url": "git+https://github.com/4Catalyzer/relay-network-layer.git"
   },
-  "author": {
-    "name": "4Catalyzer"
-  },
+  "author": "4Catalyzer",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/4Catalyzer/relay-network-layer/issues"
@@ -58,7 +56,7 @@
   },
   "peerDependencies": {
     "react": "^16.8.6",
-    "relay-runtime": "^4.0.0"
+    "relay-runtime": ">=4.0.0"
   },
   "devDependencies": {
     "@4c/babel-preset": "^7.3.6",
@@ -101,7 +99,5 @@
     "socket.io-client": "^2.3.0",
     "store": "^2.0.12",
     "utility-types": "^3.10.0"
-  },
-  "readme": "ERROR: No README data found!",
-  "_id": "relay-network-layer@1.3.0"
+  }
 }
