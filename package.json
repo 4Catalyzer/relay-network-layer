@@ -89,7 +89,7 @@
     "lint-staged": "^10.2.11",
     "prettier": "^2.0.5",
     "react": "^16.13.1",
-    "relay-runtime": "^9.1.0",
+    "relay-runtime": "^10.0.0",
     "typescript": "^3.9.6",
     "whatwg-fetch": "^3.2.0"
   },
