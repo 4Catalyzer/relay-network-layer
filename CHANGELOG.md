@@ -1,3 +1,15 @@
+## [1.3.2](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.1...v1.3.2) (2020-07-15)
+
+
+### Bug Fixes
+
+* Allow broader type dependency range ([#49](https://github.com/4Catalyzer/relay-network-layer/issues/49)) ([1fb0369](https://github.com/4Catalyzer/relay-network-layer/commit/1fb0369f9d7f7f336f2c71a4e91329231879117f))
+* Fix TypeScript build ([#50](https://github.com/4Catalyzer/relay-network-layer/issues/50)) ([0025d62](https://github.com/4Catalyzer/relay-network-layer/commit/0025d627254b17be561a4767bb43bbdfe847ed7f))
+
+
+
+
+
 ## [1.3.1](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.0...v1.3.1) (2020-03-11)
 
 
