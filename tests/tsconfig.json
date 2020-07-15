@@ -1,8 +1,0 @@
-{
-  "extends": "@4c/tsconfig/web",
-  "compilerOptions": {
-    "rootDir": "..",
-    "types": ["jest"]
-  },
-  "include": ["../src", "."]
-}

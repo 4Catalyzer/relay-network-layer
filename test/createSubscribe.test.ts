@@ -15,7 +15,7 @@ describe('createSubscribe', () => {
   jest.useFakeTimers();
 
   function run(...obs: RelayObservable<any>[]) {
-    obs.forEach(o => {
+    obs.forEach((o) => {
       subs.push(o.subscribe({}));
     });
   }
@@ -25,7 +25,7 @@ describe('createSubscribe', () => {
   });
 
   afterEach(() => {
-    subs.forEach(s => s.unsubscribe());
+    subs.forEach((s) => s.unsubscribe());
     subs.length = 1;
   });
 
@@ -86,7 +86,8 @@ describe('createSubscribe', () => {
           metadata: {},
         },
         {},
-      ),
+        {},
+      ) as RelayObservable<any>,
       subscribe(
         {
           id: '2',
@@ -96,7 +97,8 @@ describe('createSubscribe', () => {
           metadata: {},
         },
         {},
-      ),
+        {},
+      ) as RelayObservable<any>,
     );
 
     expect(client.socket.emit).not.toHaveBeenCalledWith('subscribe');
@@ -132,7 +134,8 @@ describe('createSubscribe', () => {
           metadata: {},
         },
         {},
-      ),
+        {},
+      ) as RelayObservable<any>,
     );
 
     expect(client.socket.emit).toHaveBeenLastCalledWith('subscribe', {
@@ -153,7 +156,7 @@ describe('createSubscribe', () => {
 
     jest.runAllTimers();
 
-    subscribe(
+    (subscribe(
       {
         id: '1',
         name: 'foo',
@@ -162,7 +165,8 @@ describe('createSubscribe', () => {
         metadata: {},
       },
       {},
-    ).subscribe(observer);
+      {},
+    ) as RelayObservable<any>).subscribe(observer);
 
     serverEmit('subscription update', { id: 0, data: 'foo' });
 
@@ -191,7 +195,7 @@ describe('createSubscribe', () => {
 
     jest.runAllTimers();
 
-    subscribe(
+    (subscribe(
       {
         id: '1',
         name: 'foo',
@@ -200,7 +204,8 @@ describe('createSubscribe', () => {
         metadata: {},
       },
       {},
-    ).subscribe(observer);
+      {},
+    ) as RelayObservable<any>).subscribe(observer);
 
     serverEmit('subscription update', { id: 0, data: 'foo' });
 

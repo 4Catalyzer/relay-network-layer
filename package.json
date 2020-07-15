@@ -15,13 +15,14 @@
   "homepage": "https://github.com/4Catalyzer/relay-network-layer#readme",
   "scripts": {
     "build": "4c build src",
-    "format": "4c format src './*'",
-    "lint": "4c lint src './*'",
+    "format": "4c format .",
+    "lint": "4c lint . && yarn typecheck",
     "prepublishOnly": "yarn run build",
     "release": "4c release",
     "tdd": "jest --watch",
     "test": "yarn lint && yarn testonly",
-    "testonly": "jest"
+    "testonly": "jest",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test"
   },
   "publishConfig": {
     "access": "public",
