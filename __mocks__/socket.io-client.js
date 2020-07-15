@@ -8,7 +8,7 @@ export const serverEmit = jest.fn((event, ...args) => {
   setTimeout(() => {
     if (!EVENTS[event] || !EVENTS[event].length) return;
 
-    EVENTS[event].forEach(func => func(...args));
+    EVENTS[event].forEach((func) => func(...args));
   });
 });
 

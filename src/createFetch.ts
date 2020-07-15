@@ -79,7 +79,7 @@ function createFetch({
   const auth = normalizeAuth(authorization);
 
   function processJson(json: GraphQLResponse) {
-    if (throwErrors && json?.errors) {
+    if (throwErrors && 'errors' in json && json?.errors) {
       const gqlError = new Error(
         `GraphQLError: \n\n${JSON.stringify(json.errors)}`,
       );

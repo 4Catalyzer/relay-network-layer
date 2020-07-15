@@ -65,7 +65,7 @@ describe('NetworkLayer', () => {
 
     mockEndpoint({ data: null, errors: [{ message: 'err!' }] });
 
-    const errors = await run(networkLayer).catch(errs => errs);
+    const errors = await run(networkLayer).catch((errs) => errs);
 
     expect(errors.json.errors).toHaveLength(1);
   });
@@ -80,7 +80,7 @@ describe('NetworkLayer', () => {
 
     const resp = await run(networkLayer);
 
-    expect(resp?.errors).toHaveLength(1);
+    expect(resp && 'errors' in resp && resp.errors).toHaveLength(1);
   });
 
   it('should handle uploads', async () => {
