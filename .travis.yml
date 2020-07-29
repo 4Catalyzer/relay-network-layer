@@ -1,10 +1,13 @@
 language: node_js
 node_js:
-  - lts/*
+  - node
 
 cache:
   yarn: true
   npm: true
+
+after_script:
+  - node_modules/.bin/codecov
 
 branches:
   only:
