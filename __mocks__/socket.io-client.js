@@ -12,7 +12,7 @@ export const serverEmit = jest.fn((event, ...args) => {
   });
 });
 
-export default (origin, opts) => {
+export function io(origin, opts) {
   const socket = {
     origin,
     opts,
@@ -34,4 +34,4 @@ export default (origin, opts) => {
   };
 
   return socket;
-};
+}
