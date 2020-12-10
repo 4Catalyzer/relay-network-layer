@@ -1,3 +1,31 @@
+# [2.0.0](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.2...v2.0.0) (2020-12-10)
+
+
+* chore(deps)!: update dependency socket.io-client to v3 (#75) ([db97053](https://github.com/4Catalyzer/relay-network-layer/commit/db9705351dbd7ba18b8092438fad676875803daf)), closes [#75](https://github.com/4Catalyzer/relay-network-layer/issues/75)
+
+
+### chore
+
+* **deps:** update dependency @4c/babel-preset to v8 ([#66](https://github.com/4Catalyzer/relay-network-layer/issues/66)) ([7a2e790](https://github.com/4Catalyzer/relay-network-layer/commit/7a2e7902f9f675d07266630656db2530b9af5389))
+
+
+### BREAKING CHANGES
+
+* socket.io v3
+* chore(deps): update dependency socket.io-client to v3
+
+* fix
+
+* fix tests
+
+Co-authored-by: Renovate Bot <bot@renovateapp.com>
+Co-authored-by: Giacomo Tagliabue <giacomo.tag@gmail.com>
+* **deps:** minimum browsers updated to those that support es modules 
+
+
+
+
+
 ## [1.3.2](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.1...v1.3.2) (2020-07-15)
 
 
