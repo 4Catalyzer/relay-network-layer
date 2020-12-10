@@ -6,13 +6,23 @@ import {
   Variables,
 } from 'relay-runtime';
 import { Sink } from 'relay-runtime/lib/network/RelayObservable';
-import { Socket, io } from 'socket.io-client';
+import type { io as Io, Socket } from 'socket.io-client';
 import { Class } from 'utility-types';
+
+let create: any = null;
+try {
+  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+  const socketIo = require('socket.io-client');
+  create = socketIo.io || socketIo;
+} catch (err) {
+  /* ignore */
+}
 
 export interface SubscriptionClientOptions {
   url?: string;
   token?: string | null;
   maxSubscriptions?: number;
+  io?: typeof Io;
 }
 
 export interface SubscriptionClient {
@@ -46,6 +56,7 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     url = '/socket.io/graphql',
     token = null,
     maxSubscriptions = 200,
+    io = create,
   }: SubscriptionClientOptions = {}) {
     this.maxSubscriptions = maxSubscriptions;
 

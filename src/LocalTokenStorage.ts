@@ -1,3 +1,4 @@
+// @ts-ignore IDK why this isn't working now
 import store from 'store/dist/store.modern';
 
 const TOKEN_KEY = 'relay-auth-provider:token';
