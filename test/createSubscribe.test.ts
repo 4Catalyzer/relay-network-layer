@@ -3,7 +3,7 @@ import {
   Subscription,
 } from 'relay-runtime/lib/network/RelayObservable';
 // @ts-ignore
-import { reset, serverEmit } from 'socket.io-client';
+import { io, reset, serverEmit } from 'socket.io-client';
 
 import createSubscribe, {
   SocketIoSubscriptionClient,
@@ -32,6 +32,23 @@ describe('createSubscribe', () => {
   it('should connect', () => {
     const { socket } = createSubscribe().client as SocketIoSubscriptionClient;
 
+    jest.runOnlyPendingTimers();
+
+    expect(socket.connected).toEqual(true);
+    expect(serverEmit).toHaveBeenCalledTimes(1);
+
+    // @ts-ignore
+    expect(socket.origin).toEqual('http://localhost');
+    // @ts-ignore
+    expect(socket.opts.path).toEqual('/socket.io/graphql');
+  });
+
+  it('should use passed in io', () => {
+    const spy = jest.fn(io) as typeof io;
+    const { socket } = createSubscribe({ io: spy })
+      .client as SocketIoSubscriptionClient;
+
+    expect(spy).toBeCalledTimes(1);
     jest.runOnlyPendingTimers();
 
     expect(socket.connected).toEqual(true);

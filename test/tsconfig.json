@@ -3,7 +3,7 @@
   "compilerOptions": {
     // FIXME: Typechecking tests fails unless store is explicitly
     //  included here.
-    "types": ["jest", "store"]
+    "types": ["jest", "store", "node"]
   },
   "include": [".", "../src"]
 }

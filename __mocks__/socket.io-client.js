@@ -1,16 +1,19 @@
 let EVENTS = {};
 
-export function reset() {
-  EVENTS = {};
-}
-
-export const serverEmit = jest.fn((event, ...args) => {
+const emitImpl = (event, ...args) => {
   setTimeout(() => {
     if (!EVENTS[event] || !EVENTS[event].length) return;
 
     EVENTS[event].forEach((func) => func(...args));
   });
-});
+};
+
+export const serverEmit = jest.fn(emitImpl);
+
+export function reset() {
+  EVENTS = {};
+  serverEmit.mockReset().mockImplementation(emitImpl);
+}
 
 export function io(origin, opts) {
   const socket = {

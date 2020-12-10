@@ -1,6 +1,7 @@
 import { ExecuteFunction, Network } from 'relay-runtime';
 
 import createFetch from './createFetch';
+import type { SubscriptionClientOptions } from './createSubscribe';
 import createSubscribe from './createSubscribe';
 
 export interface Network {
@@ -80,6 +81,12 @@ export interface NetworkLayerOptions {
    * The default is: `200`
    */
   maxSubscriptions?: number;
+
+  /**
+   * A constructor for a Socket.io client, allows choosing between major versions
+   * of socket io. By default the subscription client will use whatever socket.io is installed (if any).
+   */
+  io?: SubscriptionClientOptions['io'];
 }
 
 const SimpleNetworkLayer = {
@@ -90,10 +97,12 @@ const SimpleNetworkLayer = {
     authorization,
     init,
     batch,
+    io,
     maxSubscriptions,
   }: NetworkLayerOptions = {}) {
     const subscribeFn = subscriptionUrl
       ? createSubscribe({
+          io,
           token:
             typeof authorization === 'string'
               ? authorization
