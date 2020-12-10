@@ -6,7 +6,7 @@ import {
   Variables,
 } from 'relay-runtime';
 import { Sink } from 'relay-runtime/lib/network/RelayObservable';
-import io from 'socket.io-client';
+import { Socket, io } from 'socket.io-client';
 import { Class } from 'utility-types';
 
 export interface SubscriptionClientOptions {
@@ -36,7 +36,7 @@ export class SocketIoSubscriptionClient implements SubscriptionClient {
     }
   >();
 
-  readonly socket: SocketIOClient.Socket;
+  readonly socket: Socket;
 
   protected token: string | null = null;
 
