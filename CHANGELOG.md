@@ -1,3 +1,14 @@
+## [2.0.1](https://github.com/4Catalyzer/relay-network-layer/compare/v2.0.0...v2.0.1) (2021-02-04)
+
+
+### Bug Fixes
+
+* react types range ([9c3be8b](https://github.com/4Catalyzer/relay-network-layer/commit/9c3be8b83453ca79a131df6d99c71cfe9510b3fb))
+
+
+
+
+
 # [2.0.0](https://github.com/4Catalyzer/relay-network-layer/compare/v1.3.2...v2.0.0) (2020-12-10)
 
 
