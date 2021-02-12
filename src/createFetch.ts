@@ -14,19 +14,19 @@ export interface FetchOptions {
   init?: RequestInit | (() => RequestInit);
   throwErrors?: boolean;
   authorization?:
-    | null
-    | string
-    | {
-        token: string;
-        headerName?: string;
-        scheme?: string;
-      };
+  | null
+  | string
+  | {
+    token: string;
+    headerName?: string;
+    scheme?: string;
+  };
   batch?:
-    | boolean
-    | {
-        enabled: boolean;
-        timeoutMs?: number;
-      };
+  | boolean
+  | {
+    enabled: boolean;
+    timeoutMs?: number;
+  };
 }
 
 export interface Data {
@@ -47,7 +47,13 @@ function getFormData(
   formData.append('variables', JSON.stringify(variables));
 
   Object.keys(uploadables).forEach((key) => {
-    formData.append(key, uploadables[key]);
+    if (Array.isArray(uploadables[key])) {
+      uploadables[key].forEach((file) => {
+        formData.append(key, file);
+      });
+    } else {
+      formData.append(key, uploadables[key]);
+    }
   });
 
   return formData;
