@@ -40,7 +40,7 @@ let uid = 0;
 
 function getFormData(
   { id, query, variables }: Data,
-  uploadables: Record<string, FileList | Uploadable>,
+  uploadables: UploadableMap | Record<string, Uploadable[]>,
 ) {
   const formData = new FormData();
   formData.append('id', id);
@@ -48,14 +48,12 @@ function getFormData(
   formData.append('variables', JSON.stringify(variables));
 
   Object.keys(uploadables).forEach((key) => {
-    const item = uploadables[key];
-    if (item instanceof FileList) {
-      for(let i=0; i<item.length; i++) {
-        formData.append(key, item.item(i)!);
-      }
+    if (Array.isArray(uploadables[key])) {
+      (uploadables[key] as Uploadable[]).forEach(file => {
+        formData.append(key, file);
+      });
     } else {
-      const item = uploadables[key] as Uploadable;
-      formData.append(key, item);
+      formData.append(key, (uploadables as UploadableMap)[key]);
     }
   });
 
