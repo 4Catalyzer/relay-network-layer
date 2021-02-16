@@ -4,6 +4,7 @@ import {
   GraphQLResponse,
   Observable,
   RequestParameters,
+  Uploadable,
   UploadableMap,
   Variables,
 } from 'relay-runtime';
@@ -39,7 +40,7 @@ let uid = 0;
 
 function getFormData(
   { id, query, variables }: Data,
-  uploadables: UploadableMap,
+  uploadables: UploadableMap | Record<string, Uploadable[]>,
 ) {
   const formData = new FormData();
   formData.append('id', id);
@@ -47,7 +48,13 @@ function getFormData(
   formData.append('variables', JSON.stringify(variables));
 
   Object.keys(uploadables).forEach((key) => {
-    formData.append(key, uploadables[key]);
+    if (Array.isArray(uploadables[key])) {
+      (uploadables[key] as Uploadable[]).forEach((file) => {
+        formData.append(key, file);
+      });
+    } else {
+      formData.append(key, (uploadables as UploadableMap)[key]);
+    }
   });
 
   return formData;
