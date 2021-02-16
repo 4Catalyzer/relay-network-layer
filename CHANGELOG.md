@@ -1,3 +1,14 @@
+# [2.1.0](https://github.com/4Catalyzer/relay-network-layer/compare/v2.0.1...v2.1.0) (2021-02-16)
+
+
+### Features
+
+* allow uploading array of files ([#89](https://github.com/4Catalyzer/relay-network-layer/issues/89)) ([d290504](https://github.com/4Catalyzer/relay-network-layer/commit/d290504bc93ebac4e7e6d7ae99354bd508f35ba5))
+
+
+
+
+
 ## [2.0.1](https://github.com/4Catalyzer/relay-network-layer/compare/v2.0.0...v2.0.1) (2021-02-04)
 
 
