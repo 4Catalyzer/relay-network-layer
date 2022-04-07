@@ -1,3 +1,19 @@
+# [2.2.0](https://github.com/4Catalyzer/relay-network-layer/compare/v2.1.0...v2.2.0) (2022-04-07)
+
+
+### Bug Fixes
+
+* allow to use with react 17.x ([#97](https://github.com/4Catalyzer/relay-network-layer/issues/97)) ([67f704c](https://github.com/4Catalyzer/relay-network-layer/commit/67f704c9a610c90fe0bf7472d44b96cd8e247bdd))
+
+
+### Features
+
+* allow conditional batching ([7e93e27](https://github.com/4Catalyzer/relay-network-layer/commit/7e93e277b20e30855babc810466c093b9e4ff9ca))
+
+
+
+
+
 # [2.1.0](https://github.com/4Catalyzer/relay-network-layer/compare/v2.0.1...v2.1.0) (2021-02-16)
 
 
