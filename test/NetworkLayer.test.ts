@@ -18,7 +18,7 @@ describe('NetworkLayer', () => {
   // eslint-disable-next-line require-await
   async function run(
     layer: Network,
-    { files, kind = 'query', variables = {} }: any = {},
+    { files, kind = 'query', variables = {}, cacheConfig = {} }: any = {},
   ) {
     const $req = layer.execute(
       {
@@ -33,7 +33,7 @@ describe('NetworkLayer', () => {
         metadata: {},
       },
       variables,
-      {}, // cacheConfig
+      cacheConfig,
       files,
     );
 
@@ -142,6 +142,44 @@ describe('NetworkLayer', () => {
       expect(fetchMock).toHaveFetchedTimes(2);
 
       expect(req1).toEqual(defaultResponse);
+      expect(req2).toEqual(defaultResponse);
+    });
+
+    it('should conditionally batch requests', async () => {
+      const networkLayer = NetworkLayer.create({
+        batch: {
+          enabled: true,
+          shouldRequestBeBatched(_op, _v, config) {
+            if (config!.metadata?.donotBatch) return false;
+            return true;
+          },
+        },
+      });
+
+      fetchMock.post('/graphql', (_url: string, opts: any) => {
+        const body = JSON.parse(opts.body);
+        return Array.isArray(body)
+          ? Array(body.length).fill(defaultResponse)
+          : defaultResponse;
+      });
+
+      let [req1, req2] = await Promise.all([
+        run(networkLayer),
+        run(networkLayer),
+      ]);
+
+      expect(fetchMock).toHaveFetchedTimes(1);
+
+      [req1, , req2] = await Promise.all([
+        run(networkLayer),
+        run(networkLayer),
+        run(networkLayer, { cacheConfig: { metadata: { donotBatch: true } } }),
+      ]);
+
+      expect(fetchMock).toHaveFetchedTimes(3);
+
+      expect(req1).toEqual(defaultResponse);
+
       expect(req2).toEqual(defaultResponse);
     });
 

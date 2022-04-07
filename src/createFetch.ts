@@ -10,6 +10,16 @@ import {
 } from 'relay-runtime';
 import { Sink } from 'relay-runtime/lib/network/RelayObservable';
 
+export interface BatchConfig {
+  enabled: boolean;
+  timeoutMs?: number;
+  shouldRequestBeBatched?: (
+    operation: RequestParameters,
+    variables: Variables,
+    cacheConfig?: CacheConfig,
+    uploadables?: UploadableMap,
+  ) => boolean;
+}
 export interface FetchOptions {
   url?: string;
   init?: RequestInit | (() => RequestInit);
@@ -22,12 +32,7 @@ export interface FetchOptions {
         headerName?: string;
         scheme?: string;
       };
-  batch?:
-    | boolean
-    | {
-        enabled: boolean;
-        timeoutMs?: number;
-      };
+  batch?: boolean | BatchConfig;
 }
 
 export interface Data {
@@ -65,9 +70,9 @@ let batcher: null | {
   sinks: Sink<GraphQLResponse>[];
 } = null;
 
-function normalizeBatch(batch: FetchOptions['batch'] = true) {
-  const p = typeof batch === 'boolean' ? { enabled: batch } : {};
-  return { timeoutMs: 0, ...p };
+function normalizeBatch(batch: FetchOptions['batch'] = true): BatchConfig {
+  const p = typeof batch === 'boolean' ? { enabled: batch } : batch;
+  return { timeoutMs: 0, shouldRequestBeBatched: () => true, ...p };
 }
 
 function normalizeAuth(auth: FetchOptions['authorization'] = '') {
@@ -169,7 +174,7 @@ function createFetch({
                 const resp = processJson(batchResp[idx]);
                 sink.next!(resp);
                 sink.complete!();
-              } catch (err) {
+              } catch (err: any) {
                 sink.error!(err);
               }
             });
@@ -190,7 +195,7 @@ function createFetch({
   function fetchFn(
     operation: RequestParameters,
     variables: Variables,
-    _cacheConfig?: CacheConfig,
+    cacheConfig?: CacheConfig,
     uploadables?: UploadableMap,
   ) {
     // We use observables directly here instead of the promise value
@@ -210,7 +215,13 @@ function createFetch({
       if (
         batching.enabled &&
         !uploadables &&
-        operation.operationKind !== 'mutation'
+        operation.operationKind !== 'mutation' &&
+        batching.shouldRequestBeBatched!(
+          operation,
+          variables,
+          cacheConfig,
+          uploadables,
+        )
       ) {
         addToBatch(body as string, sink);
 

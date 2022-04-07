@@ -1,6 +1,6 @@
 import { ExecuteFunction, Network } from 'relay-runtime';
 
-import createFetch from './createFetch';
+import createFetch, { BatchConfig } from './createFetch';
 import type { SubscriptionClientOptions } from './createSubscribe';
 import createSubscribe from './createSubscribe';
 
@@ -42,18 +42,7 @@ export interface NetworkLayerOptions {
    *
    * **Requires a Graphql server that understands batching"
    */
-  batch?:
-    | boolean
-    | {
-        enabled: boolean;
-
-        /**
-         * The amount of time to wait before a batch is closed and sent to the server.
-         *
-         * The default is `0ms`, or about the next tick of the event loop.
-         */
-        timeoutMs?: number;
-      };
+  batch?: boolean | BatchConfig;
 
   /** The authorization configuration or token for a convenient shorthand */
   authorization?:
