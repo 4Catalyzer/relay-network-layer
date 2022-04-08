@@ -53,7 +53,7 @@
     "utility-types": "^3.10.0"
   },
   "devDependencies": {
-    "@4c/babel-preset": "^8.0.3",
+    "@4c/babel-preset": "^9.1.0",
     "@4c/cli": "^2.2.1",
     "@4c/jest-preset": "^1.5.4",
     "@4c/prettier-config": "^1.1.0",
