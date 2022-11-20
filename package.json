@@ -46,7 +46,7 @@
   "dependencies": {
     "@restart/hooks": "^0.3.26",
     "@types/node": "*",
-    "@types/react": ">=16.0.0",
+    "@types/react": ">=18.0.25",
     "@types/relay-runtime": ">=10.1.8",
     "@types/store": "^2.0.2",
     "store": "^2.0.12",
